@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediFlow — Demo</title>
+<style>
+  :root{
+    --azul:#1a66ff; --azul-osc:#0d47c4; --azul-claro:#eff5ff; --azul-borde:#d6e4ff;
+    --texto:#1c2433; --gris:#64748b; --borde:#e5eaf2;
+    --verde:#16a34a; --verde-osc:#15803d; --verde-bg:#ecfdf3; --verde-borde:#bbf7d0;
+    --amarillo:#d97706; --amarillo-bg:#fffbeb; --rojo:#dc2626; --rojo-bg:#fef2f2;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+  body{background:#fff;color:var(--texto)}
+
+  /* ===== SIDEBAR LAYOUT ===== */
+  .sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid var(--borde);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;overflow-y:auto}
+  .sb-top{padding:22px 18px 18px;border-bottom:1px solid var(--borde)}
+  .logo{font-size:20px;font-weight:800;color:var(--azul);letter-spacing:-.5px}
+  .logo span{color:var(--texto)}
+  nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px}
+  nav button{border:0;background:none;padding:9px 12px;font-size:13.5px;font-weight:500;color:var(--gris);cursor:pointer;border-radius:8px;white-space:nowrap;letter-spacing:.1px;text-align:left;width:100%;display:flex;align-items:center;gap:10px;transition:background .12s,color .12s}
+  nav button:hover{background:var(--azul-claro);color:var(--azul)}
+  nav button.activa{background:#eff5ff;color:var(--azul);font-weight:700}
+  .sb-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+  .sb-bottom{padding:12px 8px 16px;border-top:1px solid var(--borde);margin-top:auto}
+  #rolInfo{flex-direction:column;gap:7px}
+  .rol-badge{background:#f8fafc;border:1px solid var(--borde);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;color:var(--gris);display:flex;align-items:center;gap:6px}
+  .rol-badge strong{color:var(--texto)}
+  .rol-btn{font-size:12px;font-weight:700;color:var(--azul);cursor:pointer;padding:7px 12px;border-radius:8px;background:none;border:0;text-align:left;width:100%;white-space:nowrap}
+  .rol-btn:hover{background:var(--azul-claro)}
+  main{margin-left:220px;padding:32px 36px 80px}
+  .pestania{display:none}
+  .pestania.visible{display:block}
+  h2{font-size:22px;font-weight:700;margin-bottom:4px}
+  .sub{color:var(--gris);font-size:14px;margin-bottom:22px}
+
+  .fila-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+  .kpi{border:1px solid var(--borde);border-radius:12px;padding:16px 18px;background:#fff}
+  .kpi .et{font-size:12px;color:var(--gris);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .kpi .num{font-size:28px;font-weight:800;margin-top:4px}
+  .kpi .extra{font-size:12px;margin-top:4px;color:var(--gris)}
+  .kpi.alerta{border-color:#fca5a5;background:var(--rojo-bg)}
+  .kpi.alerta .num{color:var(--rojo)}
+
+  .tarjeta{border:1px solid var(--borde);border-radius:12px;padding:20px;background:#fff;margin-bottom:20px}
+  .tarjeta h3{font-size:15px;font-weight:700;margin-bottom:14px}
+
+  .sel-mes{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  select,input,textarea{border:1px solid var(--borde);border-radius:8px;padding:8px 12px;font-size:14px;background:#fff;color:var(--texto);outline:none;font-family:inherit}
+  select:focus,input:focus,textarea:focus{border-color:var(--azul)}
+  label{font-size:12px;font-weight:600;color:var(--gris);display:block;margin-bottom:4px}
+
+  .chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .chip.ok{background:var(--verde-bg);color:var(--verde)}
+  .chip.medio{background:var(--amarillo-bg);color:var(--amarillo)}
+  .chip.mal{background:var(--rojo-bg);color:var(--rojo)}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:10px 12px;background:var(--azul-claro);color:var(--azul-osc);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}
+  td{padding:10px 12px;border-bottom:1px solid var(--borde)}
+  tr:hover td{background:#fafbfe}
+  .link{color:var(--azul);font-weight:700;cursor:pointer}
+  .link:hover{text-decoration:underline}
+
+  .btn{background:var(--azul);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  .btn:hover{background:var(--azul-osc)}
+  .btn.sec{background:#fff;color:var(--azul);border:1px solid var(--azul-borde)}
+  .btn.verde{background:var(--verde)}
+  .btn.verde:hover{background:var(--verde-osc)}
+  .btn.peligro{background:none;color:var(--rojo);border:0;padding:4px 8px;font-size:12px}
+  .btn.mini{padding:5px 12px;font-size:12px}
+  .btn.wsp{background:#25d366;padding:5px 12px;font-size:12px}
+  .btn.wsp:hover{background:#1faf52}
+
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+
+  /* ===== HOY ===== */
+  .linea-hora{display:grid;grid-template-columns:58px 1fr;gap:10px;align-items:stretch;margin-bottom:8px}
+  .linea-hora .h{font-size:12.5px;font-weight:700;color:var(--gris);padding-top:10px;text-align:right}
+  .bache{border:1.5px dashed var(--azul-borde);border-radius:9px;padding:9px 14px;color:#9bb3d8;cursor:pointer;font-size:12.5px;font-weight:600}
+  .bache:hover{background:var(--azul-claro);color:var(--azul)}
+  .turno-card{border:1px solid var(--borde);border-left:4px solid var(--azul);border-radius:10px;padding:10px 14px;background:#fff;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .turno-card .quien{font-size:14px;font-weight:700}
+  .turno-card .motivo{font-size:12.5px;color:var(--gris)}
+  .alerta-item{border:1px solid var(--borde);border-left:4px solid var(--gris);border-radius:10px;padding:11px 14px;margin-bottom:9px;background:#fff}
+  .alerta-item.n1{border-left-color:var(--rojo);background:var(--rojo-bg)}
+  .alerta-item.n2{border-left-color:var(--amarillo);background:var(--amarillo-bg)}
+  .alerta-item.n3{border-left-color:var(--azul)}
+  .alerta-item .fila{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .alerta-item .tg{font-size:10px;font-weight:800;letter-spacing:.8px;padding:2px 8px;border-radius:99px}
+  .n1 .tg{background:var(--rojo);color:#fff}
+  .n2 .tg{background:var(--amarillo);color:#fff}
+  .n3 .tg{background:var(--azul);color:#fff}
+  .alerta-item .tx{font-size:13px;font-weight:600;margin-top:5px}
+
+  /* ===== FLUJO DE CONVERSIÓN ===== */
+  .flujo{display:flex;align-items:flex-start;padding:18px 4px 8px;overflow-x:auto}
+  .fl-nodo{min-width:92px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px;flex-shrink:0}
+  .fl-circ{width:72px;height:72px;border-radius:50%;background:var(--azul-claro);border:2.5px solid var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--azul-osc)}
+  .fl-nodo.fin .fl-circ{background:var(--verde-bg);border-color:var(--verde);color:var(--verde-osc)}
+  .fl-lab{font-size:10.5px;font-weight:700;color:var(--gris);max-width:96px;line-height:1.3;text-transform:uppercase;letter-spacing:.3px}
+  .fl-conn{flex:1;min-width:78px;display:flex;flex-direction:column;align-items:center;padding-top:8px}
+  .fl-conn .nota{font-size:9.5px;color:var(--gris);margin-top:2px}
+  .fl-linea{width:86%;height:3px;border-radius:2px;margin-top:9px;position:relative}
+  .fl-linea::after{content:'';position:absolute;right:-2px;top:-4.5px;border-left:9px solid;border-left-color:inherit;border-top:6px solid transparent;border-bottom:6px solid transparent}
+  .fl-fuga{margin-top:10px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11.5px;font-weight:800;color:var(--rojo);line-height:1.2}
+  .fl-fuga.leve{color:#a8b6c9}
+  .fl-fuga small{font-weight:600;font-size:9.5px}
+
+  /* ===== DIAGNÓSTICO DETALLE ===== */
+  .diag-resumen{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:16px;align-items:center;border:1px solid var(--borde);border-radius:14px;padding:18px 22px;margin-bottom:18px;background:#fff}
+  .diag-card{display:grid;grid-template-columns:115px 1fr 215px;gap:18px;align-items:center;border:1px solid var(--borde);border-radius:14px;padding:16px 20px;margin-bottom:12px;background:#fff}
+  .diag-card.mal{border-color:#fecaca}
+  .diag-card .titulo{font-size:14px;font-weight:700}
+  .diag-card .stats{display:flex;gap:22px;margin-top:8px;flex-wrap:wrap}
+  .stat .v{font-size:22px;font-weight:800}
+  .stat .k{font-size:11px;color:var(--gris);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .delta{font-size:12px;font-weight:700;margin-top:6px}
+  .delta.up{color:var(--verde)}
+  .delta.down{color:var(--rojo)}
+  .panel-der{text-align:center}
+  .panel-der .btn{margin-top:8px}
+  .sol-mini{background:var(--verde-bg);border:1px solid var(--verde-borde);border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:600;color:var(--verde-osc);line-height:1.4}
+  .orden{width:26px;height:26px;border-radius:99px;background:var(--rojo);color:#fff;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-right:8px}
+  .orden.medio{background:var(--amarillo)}
+  .orden.ok{background:var(--verde)}
+  .insignia-mayor{background:var(--rojo);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;letter-spacing:.5px}
+
+  /* ===== RENDIMIENTO ===== */
+  .rend-resumen{display:grid;grid-template-columns:auto 1fr;gap:0;align-items:stretch;border:1px solid var(--borde);border-radius:14px;overflow:hidden;margin-bottom:20px;background:#fff}
+  .rend-salud{text-align:center;padding:18px 24px;border-right:1px solid var(--borde);background:#f8fafc;min-width:130px;display:flex;flex-direction:column;justify-content:center}
+  .rend-salud-num{font-size:42px;font-weight:900;line-height:1}
+  .rend-salud-lab{font-size:10.5px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.6px;margin-top:5px}
+  .rend-salud-var{font-size:11.5px;font-weight:700;margin-top:7px}
+  .rend-kpis-grid{display:grid;grid-template-columns:repeat(6,1fr);padding:16px 20px;gap:0}
+  .rend-kpi{text-align:center;padding:8px 6px;border-right:1px solid var(--borde)}
+  .rend-kpi:last-child{border-right:none}
+  .rend-kpi-val{font-size:26px;font-weight:900;color:var(--texto)}
+  .rend-kpi-lab{font-size:10px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+  .rend-kpi-delta{font-size:10.5px;font-weight:700;margin-top:3px}
+  .rend-main-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:20px;align-items:start}
+  .rend-bloque-tit{font-size:13.5px;font-weight:800;color:var(--texto)}
+
+  /* Flujo vertical */
+  .rf-step{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:11px 12px;border-radius:10px;border:1.5px solid transparent}
+  .rf-step.mayor-fuga{background:#fef2f2;border-color:#fca5a5}
+  .rf-step-left{display:flex;align-items:center;gap:14px}
+  .rf-num{font-size:26px;font-weight:900;min-width:46px;text-align:center}
+  .rf-lab{font-size:13px;font-weight:700;color:var(--texto);line-height:1.2}
+  .rf-nota{font-size:10.5px;color:var(--gris);margin-top:2px}
+  .rf-step-right{text-align:right;min-width:130px}
+  .rf-perdido{font-size:11.5px;font-weight:700;color:var(--rojo);line-height:1.4}
+  .rf-perdido.mayor{font-size:12px}
+  .rf-mayor-badge{display:inline-block;background:var(--rojo);color:#fff;font-size:8.5px;font-weight:800;padding:2px 8px;border-radius:99px;letter-spacing:.7px;margin-top:4px;text-transform:uppercase}
+  .rf-ok{font-size:11.5px;color:var(--verde);font-weight:700}
+  .rf-conector{display:flex;flex-direction:column;align-items:flex-start;padding-left:37px;margin:1px 0}
+  .rf-linea-v{width:2px;height:10px;background:#e2e8f0;margin-left:-1px}
+  .rf-pct{border:1.5px solid;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:800;background:#fff;margin:2px 0}
+
+  /* Bloque impacto económico */
+  .rend-perdida-caja{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:14px;padding:16px 18px}
+  .rend-perdida-tit{font-size:10.5px;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+  .rend-perdida-num{font-size:28px;font-weight:900;color:#dc2626;line-height:1.1}
+  .rend-perdida-sub{font-size:11px;color:#7f1d1d;margin-top:5px;line-height:1.4}
+  .rend-perdida-rows{margin-top:12px;border-top:1px solid #fca5a5;padding-top:10px;display:flex;flex-direction:column;gap:5px}
+  .rend-perdida-row{display:flex;justify-content:space-between;font-size:12px;color:#7f1d1d}
+  .rend-perdida-row.hl{color:#dc2626;font-weight:800}
+  .rend-top-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--borde)}
+  .rend-top-row:last-child{border-bottom:none}
+  .rend-top-n{width:22px;height:22px;border-radius:50%;background:var(--azul);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rend-top-n.bot{background:#94a3b8}
+  .rend-top-nom{flex:1;font-size:12.5px;font-weight:600}
+  .rend-top-val{font-size:12px;font-weight:700}
+
+  /* Facturación por especialidad */
+  .rend-serv-row{display:grid;grid-template-columns:140px 1fr 115px 65px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--borde)}
+  .rend-serv-row:last-child{border-bottom:none}
+  .rend-serv-nom{font-size:13px;font-weight:600}
+  .rend-serv-bar-wrap{background:var(--borde);border-radius:99px;height:8px}
+  .rend-serv-bar{background:var(--azul);border-radius:99px;height:8px;min-width:4px}
+  .rend-serv-monto{font-size:12.5px;font-weight:700;text-align:right}
+  .rend-serv-conv{font-size:11.5px;font-weight:700;text-align:right}
+
+  /* Origen de pacientes */
+  .rend-origen-row{display:grid;grid-template-columns:110px 1fr 46px 46px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--borde)}
+  .rend-origen-row:last-child{border-bottom:none}
+  .rend-origen-nom{font-size:13px;font-weight:600}
+  .rend-origen-bar-wrap{background:var(--borde);border-radius:99px;height:8px}
+  .rend-origen-bar{border-radius:99px;height:8px;min-width:4px}
+  .rend-origen-cant{font-size:12.5px;font-weight:700;text-align:right}
+  .rend-origen-pct{font-size:11px;color:var(--gris);text-align:right}
+
+  /* Mayor oportunidad detectada */
+  .rend-oportunidad{border:2px solid var(--azul-borde);border-radius:14px;padding:18px 22px;background:var(--azul-claro);margin-bottom:20px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+  .rend-opp-badge{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--azul);background:#dbeafe;border:1px solid var(--azul-borde);padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:8px}
+  .rend-opp-tit{font-size:16px;font-weight:900;color:var(--azul-osc);margin-bottom:8px;line-height:1.2}
+  .rend-opp-stats{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .rend-opp-pct{font-size:28px;font-weight:900;color:var(--azul-osc)}
+  .rend-opp-sep{font-size:20px;color:var(--azul-borde);font-weight:300}
+  .rend-opp-obj{font-size:15px;font-weight:700;color:var(--azul)}
+  .rend-opp-gap{font-size:13px;font-weight:800;color:var(--rojo);background:#fee2e2;border-radius:99px;padding:3px 10px}
+  .rend-opp-sub{font-size:13px;color:var(--azul-osc);font-weight:600}
+  .rend-opp-dinero-wrap{text-align:right;flex-shrink:0}
+  .rend-opp-dinero{font-size:26px;font-weight:900;color:var(--azul-osc);line-height:1}
+  .rend-opp-dlbl{font-size:11px;font-weight:700;color:var(--azul);margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
+
+  /* Objetivo en flujo */
+  .rf-obj-line{font-size:10.5px;color:var(--gris);margin-top:2px;line-height:1.4}
+  .rf-obj-gap{font-weight:800;color:var(--rojo)}
+  .rf-obj-ok{font-weight:800;color:var(--verde)}
+  .rf-eco{font-size:11px;color:var(--rojo);font-weight:700;margin-top:3px;opacity:.85}
+  .rf-ia-btn{margin-top:6px;background:transparent;border:1.5px solid var(--azul-borde);color:var(--azul);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+  .rf-ia-btn:hover{background:var(--azul-claro)}
+
+  /* Canal origen enriquecido */
+  .rend-canal{border:1px solid var(--borde);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:100px 80px 70px 70px 1fr;align-items:center;gap:12px;margin-bottom:8px;background:#fff}
+  .rend-canal:last-child{margin-bottom:0}
+  .rend-canal-nom{font-size:13px;font-weight:700;color:var(--texto)}
+  .rend-canal-stat{text-align:center}
+  .rend-canal-stat .cv{font-size:16px;font-weight:900;color:var(--texto)}
+  .rend-canal-stat .ck{font-size:9.5px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.3px;margin-top:1px}
+  .rend-canal-bar-wrap{background:var(--borde);border-radius:99px;height:8px}
+  .rend-canal-bar{border-radius:99px;height:8px;min-width:4px}
+  .rend-canal-monto{font-size:13px;font-weight:800;text-align:right;color:var(--texto)}
+  .rend-canal-cv-badge{font-size:10.5px;font-weight:700;text-align:right;margin-top:2px}
+
+  /* ===== ASISTENTE IA ===== */
+  .estr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+  .estr{border:1px solid var(--borde);border-radius:14px;padding:20px;background:#fff;display:flex;flex-direction:column;gap:10px}
+  .estr.reco{border:2px solid var(--verde);box-shadow:0 2px 10px rgba(22,163,74,.08)}
+  .estr .cab{display:flex;justify-content:space-between;align-items:start;gap:8px}
+  .estr .ico{font-size:26px}
+  .estr h4{font-size:15.5px;font-weight:800}
+  .estr .fg{font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.4px}
+  .estr .desc{font-size:13.5px;line-height:1.5;color:var(--texto)}
+  .estr ul{margin-left:18px;font-size:13px;color:var(--gris);line-height:1.7}
+  .estr .imp{background:var(--verde-bg);border-radius:9px;padding:9px 12px;font-size:12.5px;font-weight:700;color:var(--verde-osc)}
+  .badge-reco{background:var(--verde);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:99px;letter-spacing:.5px;white-space:nowrap}
+
+  /* ===== CALENDARIO ===== */
+  .cal-cab{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+  .vistas{display:flex;gap:4px;background:var(--azul-claro);border-radius:9px;padding:3px}
+  .vistas button{border:0;background:none;padding:6px 16px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--gris);cursor:pointer}
+  .vistas button.activa{background:var(--azul);color:#fff}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-dia-nom{font-size:11px;font-weight:700;color:var(--gris);text-align:center;text-transform:uppercase;padding:4px}
+  .cal-celda{border:1px solid var(--borde);border-radius:8px;min-height:86px;padding:6px;font-size:12px;cursor:pointer;background:#fff}
+  .cal-celda:hover{border-color:var(--azul)}
+  .cal-celda.vacia{background:#fafbfc;cursor:default;border-style:dashed}
+  .cal-celda .n{font-weight:700;color:var(--gris)}
+  .cal-celda.hoy .n{background:var(--azul);color:#fff;border-radius:99px;padding:1px 7px}
+  .cal-celda.feriado{background:#f0fdfa}
+  .cal-celda.feriado .n{color:#0d9488}
+  .feriado-label{font-size:9px;font-weight:700;color:#0d9488;display:block;margin-top:2px;line-height:1.2}
+  .sem-col.feriado{border-color:#99f6e4;background:#f0fdfa}
+  .sem-col.feriado .sem-cab{color:#0d9488}
+  .sem-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .sem-col{border:1px solid var(--borde);border-radius:10px;min-height:340px;padding:8px;cursor:pointer;background:#fff}
+  .sem-col:hover{border-color:var(--azul)}
+  .sem-col.hoy{border-color:var(--azul);background:#fbfdff}
+  .sem-cab{text-align:center;font-size:10.5px;font-weight:800;color:var(--gris);text-transform:uppercase;border-bottom:1px solid var(--borde);padding-bottom:6px;margin-bottom:8px}
+  .sem-cab .num{display:block;font-size:19px;color:var(--texto)}
+  .sem-col.hoy .sem-cab .num{color:var(--azul)}
+  .turnito{background:var(--azul-claro);color:var(--azul-osc);border-radius:5px;padding:3px 6px;margin-top:4px;font-size:10.5px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .turnito.ia{background:var(--verde-bg);color:var(--verde-osc)}
+  .turnito.sobreturno{background:#fff7ed;color:#c2410c;border-left:3px solid #fb923c}
+  .turnito.privada{background:#faf5ff;color:#7c3aed;border-left:3px solid #a78bfa}
+  .turnito:hover{outline:1.5px solid var(--azul)}
+
+  /* ===== KPIs CALENDARIO ===== */
+  .cal-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  .cal-kpi{border:1px solid var(--borde);border-radius:10px;padding:12px 16px;background:#fff}
+  .cal-kpi .et{font-size:10.5px;color:var(--gris);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .cal-kpi .num{font-size:26px;font-weight:800;margin-top:2px}
+  .cal-kpi.naranja-kpi{border-color:#fed7aa;background:#fff7ed}
+  .cal-kpi.naranja-kpi .num{color:#c2410c}
+  .cal-kpi.violeta-kpi{border-color:#ddd6fe;background:#faf5ff}
+  .cal-kpi.violeta-kpi .num{color:#7c3aed}
+
+  /* ===== PRÓXIMOS DISPONIBLES ===== */
+  .disp-caja{border:1px solid var(--borde);border-radius:12px;padding:14px 16px;background:#fff;margin-bottom:20px}
+  .disp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .disp-titulo{font-size:13px;font-weight:700}
+  .disp-badge{background:var(--verde-bg);color:var(--verde);border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700}
+  .disp-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+  .disp-slot{border:1px solid var(--borde);border-radius:8px;padding:7px 8px;background:#fafbfd;display:flex;flex-direction:column;gap:2px}
+  .disp-slot-fecha{font-size:10px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.3px}
+  .disp-slot-hora{font-size:14px;font-weight:800;color:var(--texto)}
+  .disp-slot-btn{margin-top:4px;background:var(--azul);color:#fff;border:none;border-radius:6px;padding:4px 0;font-size:10px;font-weight:700;cursor:pointer;width:100%}
+  .disp-slot-btn:hover{background:var(--azul-osc)}
+  .turno-dia.sobreturno{border-left:4px solid #fb923c;background:#fffbf7}
+  .turno-dia.privada{border-left:4px solid #a78bfa;background:#fdfaff}
+  .badge-tipo{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:8px}
+  .badge-tipo.s{background:#fff7ed;color:#c2410c}
+  .badge-tipo.p{background:#faf5ff;color:#7c3aed}
+  .turno-dia{display:flex;gap:16px;align-items:center;border:1px solid var(--borde);border-radius:10px;padding:14px 18px;margin-bottom:10px}
+  .turno-dia .hora{font-size:18px;font-weight:800;color:var(--azul);min-width:60px}
+  .turno-dia .quien{flex:1}
+  .turno-dia .quien small{display:block;color:var(--gris)}
+
+  /* ===== MODAL ===== */
+  .modal-fondo{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;align-items:center;justify-content:center}
+  .modal-fondo.abierto{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:24px;width:min(440px,92vw);max-height:88vh;overflow:auto}
+  .modal h3{font-size:17px;margin-bottom:16px}
+  .modal .campo{margin-bottom:12px}
+  .modal .acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+  .modal.ancho{width:min(660px,94vw)}
+  .modal.chat{padding:0;width:min(420px,92vw);display:flex;flex-direction:column;height:min(620px,88vh)}
+
+  /* ===== FICHA ===== */
+  .ficha-cab{display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:14px}
+  .ficha-cab h3{margin:0;font-size:18px}
+  .ficha-alerta{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:11px 14px;margin-bottom:14px}
+  .ficha-alerta .alerta-tit{font-size:11px;font-weight:800;color:var(--rojo);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+  .ficha-alerta .alerta-item{font-size:13px;color:#7f1d1d;font-weight:600;line-height:1.5}
+  .ficha-motivo{background:#eff5ff;border:1.5px solid var(--azul-borde);border-radius:10px;padding:11px 14px;margin-bottom:14px}
+  .ficha-motivo .mot-label{font-size:10.5px;font-weight:800;color:var(--azul);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+  .ficha-motivo .mot-val{font-size:14px;font-weight:700;color:var(--texto)}
+  .ficha-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--borde)}
+  .ficha-grid .fg-row{display:flex;flex-direction:column;gap:1px}
+  .ficha-grid .fg-k{font-size:10.5px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.4px}
+  .ficha-grid .fg-v{font-size:13px;font-weight:600;color:var(--texto)}
+  .ficha-grid .fg-v a{color:var(--verde);text-decoration:none;font-weight:700}
+  .ficha-grid .fg-v a:hover{text-decoration:underline}
+  .ficha-sec{font-size:11px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 6px}
+  .ultima-consulta{background:#f8fafc;border-radius:8px;padding:10px 13px;margin-bottom:10px}
+  .ultima-consulta .uc-fecha{font-size:11px;font-weight:700;color:var(--gris);margin-bottom:3px}
+  .ultima-consulta .uc-texto{font-size:13.5px;color:var(--texto);line-height:1.5}
+  .hist-link{display:inline-flex;align-items:center;gap:6px;color:var(--azul);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:4px}
+  .hist-link:hover{text-decoration:underline}
+  .hist-timeline{display:none;margin-top:10px}
+  .hist-timeline.open{display:block}
+  .hist-item{display:flex;gap:12px;margin-bottom:14px}
+  .hist-item .hi-dot{width:10px;height:10px;border-radius:50%;background:var(--azul-borde);border:2px solid var(--azul);flex-shrink:0;margin-top:4px}
+  .hist-item .hi-body{flex:1;border-left:2px solid var(--azul-borde);padding-left:12px;padding-bottom:10px}
+  .hist-item .hi-fecha{font-size:11px;font-weight:700;color:var(--gris)}
+  .hist-item .hi-trat{font-size:13.5px;font-weight:700;margin:2px 0 4px}
+  .hist-item .hi-nota{font-size:12.5px;color:var(--gris);line-height:1.5}
+  .visita{border-left:3px solid var(--azul-borde);padding:6px 12px;margin-bottom:8px}
+  .visita .f{font-size:11.5px;color:var(--gris);font-weight:700}
+  .visita .t{font-size:13.5px;font-weight:700}
+  .visita .no{font-size:13px;color:var(--gris)}
+
+  /* ===== DOCUMENTOS (receta / invoice) ===== */
+  .docu{border:2px solid var(--azul-borde);border-radius:12px;padding:26px 30px;background:#fff}
+  .docu .enc{text-align:center;border-bottom:2px solid var(--azul-claro);padding-bottom:12px;margin-bottom:16px}
+  .docu .enc .cl{font-size:19px;font-weight:800;color:var(--azul)}
+  .docu .enc small{color:var(--gris);display:block;margin-top:2px;font-size:11.5px}
+  .docu .rp{font-size:26px;font-weight:800;color:var(--azul-osc);font-style:italic}
+  .docu .med{font-size:15px;margin:10px 0 4px;white-space:pre-line;line-height:1.6}
+  .docu .ind{font-size:13px;color:var(--gris);white-space:pre-line;margin-bottom:18px}
+  .docu .pie{display:flex;justify-content:space-between;align-items:end;margin-top:26px;gap:12px;flex-wrap:wrap}
+  .docu .fch{font-size:12.5px;color:var(--gris)}
+  .firma{text-align:center}
+  .firma .trazo{font-family:'Segoe Script','Brush Script MT',cursive;font-size:26px;color:#1c3d8f;transform:rotate(-4deg);margin-bottom:-6px}
+  .firma .linea{border-top:1.5px solid var(--texto);padding-top:4px;font-size:12px;font-weight:700;min-width:190px}
+  .firma .linea small{display:block;font-weight:400;color:var(--gris)}
+  .sello{width:92px;height:92px;border:2.5px solid #1c3d8f;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1c3d8f;font-size:8.5px;font-weight:700;text-align:center;transform:rotate(8deg);opacity:.85;padding:6px;line-height:1.3}
+  .inv-num{font-size:22px;font-weight:800;color:var(--azul-osc);letter-spacing:1px}
+
+  /* ===== CHAT ===== */
+  .chat-cab{background:var(--verde);color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center}
+  .chat-cab.azul{background:var(--azul)}
+  .chat-cab .t{font-weight:700;font-size:14.5px}
+  .chat-cab .s{font-size:11.5px;opacity:.9}
+  .chat-cab button{background:none;border:0;color:#fff;font-size:18px;cursor:pointer}
+  .chat-cuerpo{flex:1;overflow-y:auto;padding:16px;background:#e8f0e9;display:flex;flex-direction:column;gap:8px}
+  .chat-cuerpo.azulbg{background:#eef3fb}
+  .burb{max-width:80%;padding:9px 13px;border-radius:12px;font-size:13.5px;line-height:1.45;white-space:pre-line}
+  .burb.ia{background:#fff;align-self:flex-start;border-radius:2px 12px 12px 12px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .burb.yo{background:#d2e7ff;align-self:flex-end;border-radius:12px 2px 12px 12px}
+  .burb .hora{display:block;font-size:10px;color:var(--gris);text-align:right;margin-top:3px}
+  .veloz{align-self:flex-start;font-size:11px;font-weight:700;color:var(--verde-osc);background:var(--verde-bg);border:1px solid var(--verde-borde);padding:3px 10px;border-radius:99px}
+  .escribiendo{align-self:flex-start;background:#fff;border-radius:12px;padding:10px 16px;font-size:18px;letter-spacing:3px;color:var(--gris)}
+  .chat-ops{padding:12px 16px;background:#fff;border-radius:0 0 14px 14px;border-top:1px solid var(--borde);display:flex;flex-wrap:wrap;gap:8px}
+  .chat-ops button{border:1.5px solid var(--verde);background:#fff;color:var(--verde-osc);border-radius:99px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .chat-ops button:hover{background:var(--verde-bg)}
+
+  /* ===== BALANCE ===== */
+  .bal-sec td{background:var(--azul-claro);font-weight:800;color:var(--azul-osc);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .bal-sub td{font-weight:800;border-top:1.5px solid var(--borde)}
+  .bal-final td{border-top:2.5px solid var(--texto);font-weight:800;font-size:15px}
+
+  /* ===== REVENUE INTELLIGENCE ===== */
+  .bar-fila{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .bar-fila .lbl{font-size:13px;width:200px;flex-shrink:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-fila .bar-wrap{flex:1;background:var(--borde);border-radius:99px;height:10px;overflow:hidden}
+  .bar-fila .bar-fill{height:100%;border-radius:99px;background:var(--azul)}
+  .bar-fila .val{font-size:12.5px;font-weight:700;white-space:nowrap;min-width:90px;text-align:right}
+  .bar-sub{font-size:11px;color:var(--gris);margin:-6px 0 12px 210px}
+
+  /* ===== CHECK-IN ===== */
+  .ci-fila{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--borde);flex-wrap:wrap}
+  .ci-fila:last-child{border-bottom:none}
+  .ci-fila .ci-hora{font-size:12px;font-weight:700;color:var(--gris);width:44px;flex-shrink:0}
+  .ci-fila .ci-nombre{font-size:13.5px;font-weight:700;flex:1;min-width:110px;cursor:pointer;color:var(--azul)}
+  .ci-fila .ci-nombre:hover{text-decoration:underline}
+  .ci-btn{border:1.5px solid var(--borde);background:#fff;border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--gris);white-space:nowrap}
+  .ci-btn:hover{border-color:var(--azul);color:var(--azul)}
+  .ci-btn.sala{border-color:var(--amarillo);background:var(--amarillo-bg);color:var(--amarillo)}
+  .ci-btn.consulta{border-color:var(--azul);background:var(--azul-claro);color:var(--azul-osc)}
+  .ci-btn.listo{border-color:var(--verde);background:var(--verde-bg);color:var(--verde-osc)}
+
+  /* ===== NOTAS RÁPIDAS ===== */
+  .tpl-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .tpl-btn{border:1px solid var(--borde);background:var(--azul-claro);border-radius:6px;padding:3px 9px;font-size:11.5px;cursor:pointer;color:var(--azul-osc);font-weight:600}
+  .tpl-btn:hover{background:var(--azul);color:#fff}
+
+  .lista-scroll{max-height:520px;overflow-y:auto}
+  .dos-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+  /* ===== HOY REDESIGN ===== */
+  .kpi-hoy{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:28px}
+  .kpi-hoy .kpi{padding:22px 26px}
+  .kpi-hoy .kpi .num{font-size:34px}
+
+  .ta-row{display:grid;grid-template-columns:50px 1fr auto;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--borde)}
+  .ta-row:last-child{border-bottom:none}
+  .ta-hora{font-size:13px;font-weight:700;color:var(--gris);text-align:right}
+  .ta-nombre{font-size:15px;font-weight:700;color:var(--azul);cursor:pointer;line-height:1.2}
+  .ta-nombre:hover{text-decoration:underline}
+  .ta-info{font-size:12.5px;color:var(--gris);margin-top:3px}
+  .ta-acciones{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+
+  .kpi.naranja{border-color:#fed7aa;background:#fff7ed}
+  .kpi.naranja .num{color:#c2410c}
+
+  .nota-btn{background:var(--azul-claro);border:1px solid var(--azul-borde);color:var(--azul-osc);border-radius:8px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .nota-btn:hover{background:var(--azul);color:#fff}
+  .rec-btn{background:var(--verde-bg);border:1px solid var(--verde-borde);color:var(--verde-osc);border-radius:8px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block}
+  .rec-btn:hover{background:var(--verde);color:#fff}
+  .receta-btn{background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;border-radius:8px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .receta-btn:hover{background:#fb923c;color:#fff;border-color:#fb923c}
+  .mic-mini{background:none;border:1.5px solid var(--borde);color:var(--gris);border-radius:6px;padding:5px 8px;font-size:13px;cursor:pointer;flex-shrink:0}
+  .mic-mini:hover{border-color:var(--rojo);color:var(--rojo)}
+  .mic-mini.grabando{border-color:var(--rojo);background:var(--rojo-bg);color:var(--rojo);animation:pulso .7s infinite}
+  @keyframes pulso{0%,100%{opacity:1}50%{opacity:.5}}
+
+  .nota-campos{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .nota-campo label{font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;display:block}
+  .nota-fila-input{display:flex;gap:6px;align-items:flex-start}
+  .nota-fila-input textarea{flex:1;border:1px solid var(--borde);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;resize:vertical;min-height:52px}
+  .nota-fila-input textarea:focus{border-color:var(--azul);outline:none}
+
+  .pend-bloque{background:#f8f9fb;border:1px solid #e8ecf2;border-radius:12px;padding:4px 0}
+  .pend-item{display:flex;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #eef0f4}
+  .pend-item:last-child{border-bottom:none}
+  .pend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:7px;background:#94a3b8}
+  .pend-dot.u{background:#475569}
+  .pend-txt{font-size:13.5px;color:var(--texto);flex:1}
+  .pend-sub{font-size:12px;color:#64748b;margin-top:3px}
+
+  @media(max-width:900px){
+    .dos-col{grid-template-columns:1fr}
+    .kpi-hoy{grid-template-columns:1fr}
+    .diag-card{grid-template-columns:1fr}
+    .diag-resumen{grid-template-columns:1fr 1fr}
+    .sem-grid{grid-template-columns:1fr;}.sem-col{min-height:auto}
+  }
+  @media(max-width:720px){
+    .sidebar{width:64px}
+    .sb-top{padding:16px 12px}
+    .logo{font-size:0}.logo::after{content:'M';font-size:20px;font-weight:900;color:var(--azul)}
+    body.capa2 .logo::after{color:#60a5fa}
+    nav button{padding:10px 0;justify-content:center;gap:0}
+    nav button span:not(.sb-icon){display:none}
+    .sb-bottom{padding:10px 8px}
+    .rol-badge,.rol-btn{display:none}
+    main{margin-left:64px;padding:20px 16px 60px}
+  }
+
+  /* ===== LOGIN ===== */
+  #loginOverlay{position:fixed;inset:0;background:#0f172a;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-box{max-width:840px;width:100%;text-align:center}
+  .login-logo{font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:6px}
+  .login-logo span{color:#60a5fa}
+  .login-tag{font-size:14px;color:#64748b;margin-bottom:48px}
+  .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;text-align:left}
+  .login-opt{background:#1e293b;border:1.5px solid #334155;border-radius:16px;padding:30px 26px;cursor:pointer;transition:all .2s}
+  .login-opt:hover,.login-opt.hl{border-color:#3b82f6;background:#172554;transform:translateY(-2px);box-shadow:0 12px 40px rgba(59,130,246,.3)}
+  .login-ico{font-size:36px;margin-bottom:14px}
+  .login-rol{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#475569;margin-bottom:6px}
+  .login-opt.hl .login-rol{color:#60a5fa}
+  .login-tit{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px}
+  .login-desc{font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:16px}
+  .login-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .lchip{background:#334155;color:#94a3b8;border-radius:99px;padding:3px 11px;font-size:11px;font-weight:700}
+  .login-opt.hl .lchip{background:#1d4ed8;color:#bfdbfe}
+  .badge-pro{display:inline-block;background:#1d4ed8;color:#fff;border-radius:99px;padding:2px 8px;font-size:9.5px;font-weight:800;letter-spacing:.5px;margin-left:6px;vertical-align:middle}
+  @media(max-width:600px){.login-grid{grid-template-columns:1fr}}
+
+  /* ===== ROL BADGE ===== */
+  .rol-info{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+  .rol-badge{background:#f8fafc;border:1px solid var(--borde);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--gris);display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .rol-badge strong{color:var(--texto)}
+  .rol-btn{font-size:12px;font-weight:700;color:var(--azul);cursor:pointer;padding:5px 10px;border-radius:99px;background:none;border:0;white-space:nowrap}
+  .rol-btn:hover{background:var(--azul-claro)}
+
+  /* ===== CAPA 2 DARK SIDEBAR ===== */
+  body.capa2 .sidebar{background:#0f172a;border-right-color:#1e293b}
+  body.capa2 .sb-top{border-bottom-color:#1e293b}
+  body.capa2 .logo{color:#fff}
+  body.capa2 .logo span{color:#60a5fa}
+  body.capa2 nav button{color:#94a3b8}
+  body.capa2 nav button:hover{background:#1e293b;color:#e2e8f0}
+  body.capa2 nav button.activa{background:#1e2d4a;color:#60a5fa;font-weight:700}
+  body.capa2 .sb-bottom{border-top-color:#1e293b}
+  body.capa2 .rol-badge{background:#1e293b;border-color:#334155;color:#64748b}
+  body.capa2 .rol-badge strong{color:#e2e8f0}
+  body.capa2 .rol-btn{color:#60a5fa}
+  body.capa2 .rol-btn:hover{background:#1e293b}
+
+  /* ===== PACIENTES CARDS ===== */
+  .pac-barra{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .pac-card{border:1px solid var(--borde);border-radius:12px;background:#fff;margin-bottom:12px;overflow:hidden}
+  .pac-card-hd{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
+  .pac-card-nom{font-size:15px;font-weight:800;cursor:pointer;color:var(--azul)}
+  .pac-card-nom:hover{text-decoration:underline}
+  .pac-card-body{padding:12px 18px}
+  .pac-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:5px 16px;margin-bottom:10px}
+  .pac-info-item{font-size:12.5px;color:var(--gris);display:flex;align-items:flex-start;gap:5px}
+  .pac-info-item strong{color:var(--texto)}
+  .pac-alerta{background:var(--rojo-bg);border:1px solid #fca5a5;border-radius:7px;padding:7px 12px;font-size:12.5px;font-weight:700;color:var(--rojo);margin-bottom:10px}
+  .pac-hist{margin-top:8px}
+  .pac-hist-tit{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gris);margin-bottom:6px}
+  .pac-hist-item{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f8fafc;font-size:12.5px}
+  .pac-hist-item:last-child{border-bottom:0}
+  .pac-hist-fecha{color:var(--gris);white-space:nowrap;min-width:72px}
+  .pac-hist-trat{font-weight:700;color:var(--texto)}
+  .pac-hist-nota{color:var(--gris);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;max-width:380px;white-space:nowrap}
+  .pac-acciones{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+  /* ===== EXEC TOP 3 (RENDIMIENTO) ===== */
+  .exec-top3{display:grid;grid-template-columns:1.65fr 1fr 1fr;gap:14px;margin-bottom:22px}
+  .exec-idx{background:#0f172a;border-radius:14px;padding:26px 28px;color:#fff;position:relative;overflow:hidden}
+  .exec-idx::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(29,78,216,.18)}
+  .exec-idx-lab{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#60a5fa;margin-bottom:8px}
+  .exec-idx-num{font-size:56px;font-weight:900;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+  .exec-idx-track{height:7px;background:#1e293b;border-radius:99px;overflow:hidden;margin:10px 0 6px}
+  .exec-idx-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
+  .exec-idx-var{font-size:13px;font-weight:700;margin-bottom:4px}
+  .exec-idx-sub{font-size:11px;color:#475569;line-height:1.5}
+  .exec-metric{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:22px;display:flex;flex-direction:column}
+  .exec-metric-lab{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris);margin-bottom:8px}
+  .exec-metric-num{font-size:26px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+  .exec-metric-sub{font-size:12px;color:var(--gris);margin-top:8px;flex:1}
+  .exec-metric.alerta{border-left:4px solid var(--rojo)}
+  .exec-metric.alerta .exec-metric-num{color:var(--rojo)}
+  .exec-metric.pos{border-left:4px solid var(--verde)}
+  .exec-metric.pos .exec-metric-num{color:var(--verde)}
+  @media(max-width:800px){.exec-top3{grid-template-columns:1fr 1fr}.exec-idx{grid-column:1/-1}}
+  @media(max-width:480px){.exec-top3{grid-template-columns:1fr}}
+
+  /* ===== EXEC FLUJO ===== */
+  .exec-flujo-wrap{border:1px solid var(--borde);border-radius:14px;padding:22px 24px;background:#fff;margin-bottom:20px}
+  .exec-flujo-tit{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris);margin-bottom:20px}
+  .exec-funnel{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
+  .ef-stage{min-width:86px;flex-shrink:0;padding:4px 0}
+  .ef-num{font-size:38px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+  .ef-lab{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gris);margin-top:3px}
+  .ef-perdidos{font-size:11px;font-weight:700;margin-top:6px}
+  .ef-conn{flex:1;min-width:70px;display:flex;flex-direction:column;align-items:center;padding-top:10px}
+  .ef-pct{font-size:14px;font-weight:900}
+  .ef-obj{font-size:10px;color:var(--gris);margin-top:1px}
+  .ef-bar{width:100%;height:5px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin:5px 0 3px}
+  .ef-bar-fill{height:100%;border-radius:99px}
+  .ef-gap{font-size:10.5px;font-weight:800}
+
+  /* ===== EXEC SERVICIOS merged ===== */
+  .exec-svc-wrap{border:1px solid var(--borde);border-radius:14px;padding:22px 24px;background:#fff;margin-bottom:20px}
+  .exec-svc-tit{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris);margin-bottom:16px}
+  .exec-svc-grid{display:grid;grid-template-columns:22px 1fr 58px 58px minmax(110px,1.2fr) 54px 110px;gap:10px;align-items:center}
+  .exec-svc-hd{padding:0 0 8px;border-bottom:1px solid var(--borde);margin-bottom:2px}
+  .exec-svc-row{padding:10px 0;border-bottom:1px solid #f8fafc}
+  .exec-svc-row:last-child{border-bottom:0}
+  .exec-col-h{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gris)}
+  .exec-rk{font-size:12px;font-weight:800;color:var(--gris)}
+  .exec-svc-nom{font-size:13.5px;font-weight:700}
+  .exec-cnt{font-size:13.5px;text-align:center;font-variant-numeric:tabular-nums}
+  .exec-svc-conv-pct{font-size:12.5px;font-weight:800}
+  .exec-svc-conv-bar{height:5px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin-top:3px}
+  .exec-svc-conv-fill{height:100%;border-radius:99px}
+  .exec-gap-v{font-size:11.5px;font-weight:800;text-align:center}
+  .exec-fac{font-size:13px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+  @media(max-width:900px){
+    .exec-svc-grid{grid-template-columns:22px 1fr minmax(100px,1fr) 54px 100px}
+    .exec-svc-hd .hide-sm,.exec-svc-row .hide-sm{display:none}
+  }
+
+  /* ===== EXEC ORIGEN ===== */
+  .exec-orig-wrap{border:1px solid var(--borde);border-radius:14px;padding:22px 24px;background:#fff;margin-bottom:20px}
+  .exec-orig-tit{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris);margin-bottom:16px}
+  .exec-orig-grid{display:grid;grid-template-columns:1fr 64px minmax(160px,1.5fr) 70px;gap:12px;align-items:center}
+  .exec-orig-hd{padding:0 0 8px;border-bottom:1px solid var(--borde)}
+  .exec-orig-row{padding:10px 0;border-bottom:1px solid #f8fafc}
+  .exec-orig-row:last-child{border-bottom:0}
+  .exec-orig-canal{font-size:13.5px;font-weight:700}
+  .exec-orig-n{font-size:13.5px;text-align:center;font-variant-numeric:tabular-nums}
+  .exec-orig-bar-lbl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .exec-orig-bar-monto{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+  .exec-orig-bar-pct{font-size:10.5px;color:var(--gris);font-weight:700}
+  .exec-orig-bar-wrap{height:5px;background:#f1f5f9;border-radius:99px;overflow:hidden}
+  .exec-orig-bar-fill{height:100%;border-radius:99px}
+  .exec-orig-conv{font-size:12.5px;font-weight:800;text-align:right}
+
+  /* ===== EXEC KPI 4 ===== */
+  .exec-kpi4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .ex-kpi{border:1px solid var(--borde);border-radius:12px;padding:18px 20px;background:#fff}
+  .ex-kpi-lab{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris);margin-bottom:8px}
+  .ex-kpi-num{font-size:24px;font-weight:900;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .ex-kpi-sub{font-size:11.5px;color:var(--gris);margin-top:4px}
+  .ex-kpi-prog{height:4px;border-radius:99px;background:#f1f5f9;overflow:hidden;margin-top:10px}
+  .ex-kpi-prog-fill{height:100%;border-radius:99px}
+  .ex-kpi.verde .ex-kpi-num{color:var(--verde)}
+  .ex-kpi.rojo .ex-kpi-num{color:var(--rojo)}
+  .ex-kpi.amarillo .ex-kpi-num{color:var(--amarillo)}
+  .exec-kpi-card{border:1px solid var(--borde);border-radius:12px;padding:18px 20px;background:#fff}
+  .exec-kpi-card.alerta{border-left:4px solid var(--rojo)}
+  .exec-kpi-card.pos{border-left:4px solid var(--verde)}
+  .exec-kpi-lab{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris);margin-bottom:8px}
+  .exec-kpi-num{font-size:24px;font-weight:900;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .exec-kpi-sub{font-size:11.5px;color:var(--gris);margin-top:6px}
+  @media(max-width:700px){.exec-kpi4{grid-template-columns:1fr 1fr}}
+
+  /* ===== EXEC BALANCE P&L ===== */
+  .exec-pl{border:1px solid var(--borde);border-radius:14px;overflow:hidden;background:#fff;margin-bottom:20px}
+  .exec-pl-hd{background:#0f172a;color:#fff;padding:14px 22px;font-size:10.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+  .exec-pl-sect{padding:18px 22px;border-bottom:1px solid var(--borde)}
+  .exec-pl-sect-hd{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris);padding-bottom:10px;margin-bottom:6px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:baseline}
+  .exec-pl-sect-total{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums}
+  .exec-pl-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8fafc;font-size:13.5px}
+  .exec-pl-line:last-child{border-bottom:0}
+  .exec-pl-line .lbl{color:var(--gris)}
+  .exec-pl-line .monto{font-weight:700;font-variant-numeric:tabular-nums}
+  .exec-pl-line.cat-hd{font-weight:800;font-size:12.5px;padding-top:10px}
+  .exec-pl-line.cat-hd .lbl{color:var(--texto)}
+  .exec-pl-line.cat-sub{padding-left:20px}
+  .exec-resultado{background:#0f172a;color:#fff;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+  .exec-resultado-lbl{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px}
+  .exec-resultado-num{font-size:28px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .exec-resultado-meta{font-size:12px;color:#64748b;margin-top:4px}
+  .exec-margen-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 22px;text-align:center;flex-shrink:0}
+  .exec-margen-num{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}
+  .exec-margen-lab{font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:3px}
+
+  /* ===== PAGOS 2 COL ===== */
+  .pagos-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .pagos-blk-tit{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris);margin-bottom:12px}
+  @media(max-width:700px){.pagos-2col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN OVERLAY ============ -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Medi<span>Flow</span></div>
+    <p class="login-tag">Software de gestión clínica inteligente · Seleccioná tu perfil para continuar</p>
+    <div class="login-grid">
+      <div class="login-opt" onclick="ingresar('capa1')">
+        <div class="login-ico">🩺</div>
+        <div class="login-rol">Acceso Operativo</div>
+        <div class="login-tit">Recepcionista / Médico</div>
+        <div class="login-desc">Gestión diaria: turnos, agenda y seguimiento de pacientes. Todo lo que necesitás para operar la clínica.</div>
+        <div class="login-chips">
+          <span class="lchip">Hoy</span>
+          <span class="lchip">Calendario</span>
+          <span class="lchip">Pacientes</span>
+        </div>
+      </div>
+      <div class="login-opt hl" onclick="ingresar('capa2')">
+        <div class="login-ico">📊</div>
+        <div class="login-rol">Acceso Ejecutivo <span class="badge-pro">PROPIETARIO</span></div>
+        <div class="login-tit">Dueño / Socio</div>
+        <div class="login-desc">Visión completa del negocio: rendimiento, finanzas, inteligencia artificial y diagnóstico de crecimiento.</div>
+        <div class="login-chips">
+          <span class="lchip">Todo lo anterior</span>
+          <span class="lchip">Rendimiento</span>
+          <span class="lchip">Asistente IA</span>
+          <span class="lchip">Pagos</span>
+          <span class="lchip">Balance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<aside class="sidebar">
+  <div class="sb-top">
+    <div class="logo">Medi<span>Flow</span></div>
+  </div>
+  <nav id="nav"></nav>
+  <div class="sb-bottom">
+    <div id="rolInfo" style="display:none">
+      <div class="rol-badge"><strong id="rolNombre">—</strong></div>
+      <button class="rol-btn" onclick="document.getElementById('loginOverlay').style.display='flex'">↩ Cambiar rol</button>
+    </div>
+  </div>
+</aside>
+
+<main>
+
+<!-- ============ HOY ============ -->
+<section class="pestania" id="tab-hoy">
+  <div style="margin-bottom:26px">
+    <h2 id="hoyTitulo">Hola 👋</h2>
+    <p class="sub" style="margin-bottom:0">Tu día de hoy.</p>
+  </div>
+  <div class="kpi-hoy" id="kpisHoy"></div>
+  <div class="tarjeta" style="margin-bottom:24px">
+    <h3 style="margin-bottom:16px">🗓 Agenda de hoy</h3>
+    <div id="agendaHoy"></div>
+  </div>
+  <div id="pendientesHoy"></div>
+</section>
+
+<!-- ============ CALENDARIO ============ -->
+<section class="pestania" id="tab-cal">
+  <h2>Calendario</h2>
+  <p class="sub">Resumen semanal y próximos turnos disponibles.</p>
+
+  <!-- KPIs semanales -->
+  <div class="cal-kpis" id="calKpis"></div>
+
+  <!-- Caja de disponibles -->
+  <div class="disp-caja">
+    <div class="disp-header">
+      <span class="disp-titulo">📅 Próximos turnos disponibles</span>
+      <span class="disp-badge" id="dispBadge">— disponibles</span>
+    </div>
+    <div class="disp-grid" id="dispGrid"></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="cal-cab">
+      <button class="btn sec" onclick="moverCal(-1)">‹ Anterior</button>
+      <div style="text-align:center">
+        <h3 id="calTitulo" style="margin:0 0 8px"></h3>
+        <div class="vistas">
+          <button id="v_dia" onclick="setVista('dia')">Día</button>
+          <button id="v_sem" onclick="setVista('sem')">Semana</button>
+          <button id="v_mes" onclick="setVista('mes')">Mes</button>
+        </div>
+      </div>
+      <button class="btn sec" onclick="moverCal(1)">Siguiente ›</button>
+    </div>
+    <div id="calCuerpo"></div>
+  </div>
+</section>
+
+<!-- ============ PACIENTES ============ -->
+<section class="pestania" id="tab-pac">
+  <div style="margin-bottom:20px">
+    <h2 style="margin:0">Pacientes</h2>
+    <p class="sub" style="margin:4px 0 0">Historia clínica, seguimiento y contacto de cada paciente.</p>
+  </div>
+  <div class="pac-barra">
+    <input id="buscarPac" placeholder="Buscar paciente por nombre..." oninput="renderPac()" style="flex:1;max-width:340px">
+    <button class="btn" onclick="abrirModal('paciente')">+ Nuevo paciente</button>
+  </div>
+  <div id="listaPacientes"></div>
+</section>
+
+<!-- ============ RENDIMIENTO ============ -->
+<section class="pestania" id="tab-diag">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+    <div>
+      <h2 style="margin:0">Rendimiento</h2>
+      <p class="sub" style="margin:4px 0 0">Inteligencia ejecutiva · <span id="rend-mes-lbl">—</span></p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="mesEst" onchange="render()"></select>
+      <button class="btn sec" onclick="toggleForm()">✎ Cargar datos</button>
+    </div>
+  </div>
+
+  <!-- Formulario de carga — oculto por defecto -->
+  <div class="tarjeta" id="formCard" style="display:none">
+    <h3>Agregar / actualizar mes</h3>
+    <div class="form-grid">
+      <div><label>Mes</label><input id="f_mes" placeholder="Ej: Julio 2026"></div>
+      <div><label>Contactaron</label><input id="f_contactos" type="number" min="0"></div>
+      <div><label>Sacaron turno</label><input id="f_turnos" type="number" min="0"></div>
+      <div><label>Asistieron</label><input id="f_asistencias" type="number" min="0"></div>
+      <div><label>Tratamiento iniciado</label><input id="f_tratamientos" type="number" min="0"></div>
+      <div><label>Retención</label><input id="f_retenciones" type="number" min="0"></div>
+      <div><label>Refirieron</label><input id="f_referidos" type="number" min="0"></div>
+      <div><label>Resp. consultas (hs)</label><input id="f_respuestaHs" type="number" min="0" step="0.5"></div>
+      <div><label>Demora turno (días)</label><input id="f_demoraDias" type="number" min="0"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn" onclick="guardarMes()">Guardar mes</button>
+      <button class="btn sec" onclick="toggleForm()">Cancelar</button>
+    </div>
+    <div style="margin-top:14px;overflow-x:auto"><table id="tablaMeses"></table></div>
+  </div>
+
+  <!-- B1: Métricas ejecutivas top -->
+  <div id="rend-top3"></div>
+
+  <!-- Mayor oportunidad detectada -->
+  <div id="rend-opp"></div>
+
+  <!-- B2: Flujo del paciente rediseñado -->
+  <div id="rend-flujo-blk"></div>
+
+  <!-- B3: Rendimiento por servicio (unificado) -->
+  <div id="rend-servicios"></div>
+
+  <!-- B4: Origen de pacientes -->
+  <div id="rend-origen"></div>
+</section>
+
+<!-- ============ ASISTENTE IA ============ -->
+<section class="pestania" id="tab-ia">
+  <h2>Asistente IA</h2>
+  <p class="sub">Soluciones automáticas para cada fuga detectada en tu clínica.</p>
+  <div class="estr-grid" id="estrategias"></div>
+
+  <div class="tarjeta" style="margin-top:24px">
+    <h3>🛟 Soporte</h3>
+    <p style="font-size:13.5px;color:var(--gris);margin-bottom:14px">¿Dudas con MediFlow? Estamos para ayudarte.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn verde" onclick="abrirSoporte()">💬 Chatear con soporte</button>
+      <a class="btn sec" href="mailto:soporte@mediflow.app">✉ soporte@mediflow.app</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGOS ============ -->
+<section class="pestania" id="tab-pagos">
+  <div style="margin-bottom:20px">
+    <h2 style="margin:0">Pagos</h2>
+    <p class="sub" style="margin:4px 0 0">Estado financiero del período · Facturación, cobros y registros.</p>
+  </div>
+  <div id="kpisPagos"></div>
+  <div class="pagos-2col">
+    <div class="tarjeta">
+      <div class="pagos-blk-tit">INGRESOS POR SERVICIO</div>
+      <div id="barrasServicios"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="pagos-blk-tit">POR MÉDICO</div>
+      <div id="tablasMedicos"></div>
+    </div>
+  </div>
+  <div class="tarjeta">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="pagos-blk-tit" style="margin:0">REGISTROS DE PAGO</div>
+      <button class="btn" onclick="abrirModal('registro')">+ Nuevo registro</button>
+    </div>
+    <div style="overflow-x:auto"><table id="tablaFin"></table></div>
+  </div>
+</section>
+
+<!-- ============ BALANCE ============ -->
+<section class="pestania" id="tab-bal">
+  <div style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div>
+      <h2 style="margin:0">Balance</h2>
+      <p class="sub" style="margin:4px 0 0">Estado de resultados · Ingresos, egresos y resultado neto del período.</p>
+    </div>
+    <button class="btn" onclick="abrirModal('gasto')">+ Agregar gasto</button>
+  </div>
+  <div id="kpisBal"></div>
+  <div id="tablaBalance"></div>
+</section>
+
+<!-- ============ USUARIO ============ -->
+<section class="pestania" id="tab-usr">
+  <h2>Usuario</h2>
+  <p class="sub">Tus datos profesionales. Se usan en recetas e invoices.</p>
+  <div class="dos-col">
+    <div class="tarjeta">
+      <h3>👤 Perfil profesional</h3>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div><label>Nombre y apellido</label><input id="u_nombre"></div>
+        <div><label>Especialidad</label><input id="u_esp"></div>
+        <div><label>Matrícula</label><input id="u_mat"></div>
+        <div><label>Email</label><input id="u_mail"></div>
+      </div>
+      <div style="margin-top:14px"><button class="btn" onclick="guardarUsuario()">Guardar cambios</button></div>
+    </div>
+    <div class="tarjeta">
+      <h3>✍ Firma y sello</h3>
+      <p style="font-size:13px;color:var(--gris);margin-bottom:14px">Así aparecen en tus recetas:</p>
+      <div style="display:flex;align-items:end;gap:18px;justify-content:center;padding:10px" id="firmaPreview"></div>
+      <p style="font-size:12px;color:var(--gris);margin-top:14px">Plan actual: <strong style="color:var(--azul)">Profesional</strong> · Sesión iniciada como <span id="u_quien"></span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AJUSTES ============ -->
+<section class="pestania" id="tab-set">
+  <h2>Ajustes</h2>
+  <p class="sub">Configuración de la clínica.</p>
+  <div class="dos-col">
+    <div class="tarjeta">
+      <h3>🏥 Datos de la clínica</h3>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div><label>Nombre</label><input id="s_nombre"></div>
+        <div><label>Dirección</label><input id="s_dir"></div>
+        <div><label>Teléfono</label><input id="s_tel"></div>
+      </div>
+      <h3 style="margin-top:18px">⏰ Horario de atención</h3>
+      <div style="display:flex;gap:10px">
+        <div><label>Desde</label><select id="s_ini"></select></div>
+        <div><label>Hasta</label><select id="s_fin"></select></div>
+      </div>
+      <h3 style="margin-top:18px">💲 Ticket promedio por tratamiento</h3>
+      <input id="s_ticket" type="number" min="0">
+      <div style="margin-top:16px"><button class="btn" onclick="guardarAjustes()">Guardar cambios</button></div>
+    </div>
+    <div class="tarjeta">
+      <h3>🎯 Objetivos del diagnóstico</h3>
+      <p style="font-size:12.5px;color:var(--gris);margin-bottom:12px">Porcentajes y tiempos contra los que se mide tu clínica.</p>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr" id="benchInputs"></div>
+      <div style="margin-top:14px"><button class="btn" onclick="guardarObjetivos()">Guardar objetivos</button></div>
+      <h3 style="margin-top:22px">🗑 Datos</h3>
+      <button class="btn sec" onclick="resetDemo()" style="color:var(--rojo);border-color:#fca5a5">Restablecer datos de demostración</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- Modal genérico -->
+<div class="modal-fondo" id="modalFondo" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal" id="modalCaja"></div>
+</div>
+
+<script>
+/* ================== METADATOS ================== */
+const BENCH_META = {
+  turno:      {nombre:'Contacto → Turno'},
+  asistencia: {nombre:'Turno → Asistencia'},
+  tratamiento:{nombre:'Consulta → Tratamiento'},
+  retencion:  {nombre:'Tratamiento → Retención'},
+  referido:   {nombre:'Atendidos → Referido / Reseña'},
+  respuestaHs:{nombre:'Respuesta a consultas', unidad:'hs'},
+  demoraDias: {nombre:'Demora para conseguir turno', unidad:'días'}
+};
+
+const ESTRATEGIAS = [
+  {key:'turno', ico:'🤖', titulo:'Recepcionista IA', fuga:'Contacto → Turno · Tiempo de respuesta',
+   desc:'Atiende WhatsApp e Instagram de la clínica. Responde precios, coberturas y dudas en segundos, y agenda turnos directo en tu calendario, 24/7.',
+   pasos:['Responde en menos de 10 segundos, a cualquier hora','Ofrece los horarios libres y agenda solo','Deriva a un humano cuando no sabe la respuesta'],
+   imp:'Responder al instante puede duplicar la cantidad de contactos que terminan en turno.', demo:true},
+  {key:'asistencia', ico:'🔔', titulo:'Recordatorios automáticos', fuga:'Turno → Asistencia',
+   desc:'WhatsApp automático 48 h y 3 h antes de cada turno, con confirmación de un toque.',
+   pasos:['Confirmación con botón "Sí, voy"','Si cancela, ofrece reagendar en el momento','El hueco liberado se ofrece a la lista de espera'],
+   imp:'Reduce el ausentismo típico del 20-30% a menos del 10%.'},
+  {key:'tratamiento', ico:'📋', titulo:'Presupuesto digital + seguimiento', fuga:'Consulta → Tratamiento',
+   desc:'El paciente se va de la consulta con el presupuesto en su WhatsApp, y el sistema hace el seguimiento solo.',
+   pasos:['Presupuesto prolijo con opciones de pago en cuotas','Mensaje automático a las 48 h si no respondió','Aviso al médico si pasan 7 días sin respuesta'],
+   imp:'El seguimiento a las 48 h recupera 1 de cada 3 presupuestos sin respuesta.'},
+  {key:'retencion', ico:'📅', titulo:'Plan de control periódico', fuga:'Tratamiento → Retención',
+   desc:'Antes del alta, el sistema sugiere ofrecer un plan de chequeo (mensual, trimestral o anual) con débito automático.',
+   pasos:['Precio preferencial por adhesión','Cobro automático: el paciente no tiene que acordarse','Los turnos del plan se agendan solos'],
+   imp:'Ingresos recurrentes y predecibles todos los meses.'},
+  {key:'referido', ico:'⭐', titulo:'Reseñas y referidos automáticos', fuga:'Atendidos → Referido / Reseña',
+   desc:'Después de cada consulta, un mensaje con link directo a la reseña de Google. Y un programa de referidos con beneficio.',
+   pasos:['Pedido de reseña 2 h después de la consulta','Link directo: 2 toques y está publicada','Descuento para quien refiere y para el referido'],
+   imp:'Más reseñas = más pacientes nuevos sin gastar en publicidad.'},
+  {key:'demoraDias', ico:'⏱', titulo:'Lista de espera inteligente', fuga:'Demora para conseguir turno',
+   desc:'Cuando alguien cancela, ese hueco se ofrece automáticamente a los pacientes en espera.',
+   pasos:['Cada cancelación se ofrece por WhatsApp a la lista','El primero que confirma se queda con el turno','La agenda queda siempre llena'],
+   imp:'Baja la demora promedio y elimina los huecos muertos de la agenda.'}
+];
+
+/* ================== ESTADO + DATOS DEMO ================== */
+const HOY = new Date();
+function fechaStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+const hoyStr = () => fechaStr(HOY);
+function D(n){ const d=new Date(HOY); d.setDate(d.getDate()+n); return fechaStr(d); }
+
+function estadoDemo(){ return {
+  clinica:{nombre:'Clínica Vital', dir:'Av. Santa Fe 1234, CABA', tel:'11 4444-5555'},
+  doctor:{nombre:'Dr. Martín Aguirre', esp:'Medicina General', mat:'M.N. 123.456', mail:'maguirre@clinicavital.com'},
+  config:{ticket:180000, horaIni:9, horaFin:18},
+  bench:{turno:60, asistencia:85, tratamiento:55, retencion:35, referido:20, respuestaHs:2, demoraDias:7},
+  meses: [
+    {id:1, nombre:'Abril 2026', contactos:95,  turnos:55, asistencias:48, tratamientos:15, retenciones:5, referidos:2, respuestaHs:10, demoraDias:14,
+      origen:{referidos:{pac:12,trat:8,fac:1440000},google:{pac:28,trat:5,fac:900000},instagram:{pac:35,trat:2,fac:360000},web:{pac:14,trat:0,fac:0},otros:{pac:6,trat:0,fac:0}}},
+    {id:2, nombre:'Mayo 2026',  contactos:110, turnos:70, asistencias:60, tratamientos:21, retenciones:8, referidos:4, respuestaHs:7,  demoraDias:10,
+      origen:{referidos:{pac:18,trat:11,fac:1980000},google:{pac:32,trat:7,fac:1260000},instagram:{pac:40,trat:2,fac:360000},web:{pac:12,trat:1,fac:180000},otros:{pac:8,trat:0,fac:0}}},
+    {id:3, nombre:'Junio 2026', contactos:120, turnos:78, asistencias:64, tratamientos:18, retenciones:7, referidos:3, respuestaHs:9,  demoraDias:12,
+      origen:{referidos:{pac:22,trat:9,fac:1620000},google:{pac:35,trat:5,fac:900000},instagram:{pac:42,trat:2,fac:360000},web:{pac:14,trat:2,fac:360000},otros:{pac:7,trat:0,fac:0}}}
+  ],
+  servicios: [
+    {nombre:'Implantes',       diagnosticos:40, iniciados:24, facturacion:4500000},
+    {nombre:'Ortodoncia',      diagnosticos:25, iniciados:9,  facturacion:2800000},
+    {nombre:'Estética dental', diagnosticos:15, iniciados:11, facturacion:1650000},
+    {nombre:'Endodoncia',      diagnosticos:18, iniciados:14, facturacion:840000},
+    {nombre:'Limpiezas',       diagnosticos:60, iniciados:52, facturacion:520000},
+    {nombre:'Urgencias',       diagnosticos:22, iniciados:20, facturacion:400000},
+    {nombre:'Pediatría',       diagnosticos:12, iniciados:10, facturacion:300000}
+  ],
+  turnosCal: [
+    {fecha:D(0), hora:'09:00', paciente:'Marta Suárez',     motivo:'Control mensual'},
+    {fecha:D(0), hora:'09:30', paciente:'Lucía Fernández',  motivo:'Chequeo anual'},
+    {fecha:D(0), hora:'10:00', paciente:'Ana López',        motivo:'Entrega de estudios'},
+    {fecha:D(0), hora:'10:30', paciente:'Valentina Ruiz',   motivo:'Control post-operatorio'},
+    {fecha:D(0), hora:'11:00', paciente:'Julián Pérez',     motivo:'Primera consulta', privada:true},
+    {fecha:D(0), hora:'11:30', paciente:'Jorge Castro',     motivo:'Control de presión', sobreturno:true},
+    {fecha:D(0), hora:'12:00', paciente:'Gabriela Torres',  motivo:'Consulta dolor lumbar'},
+    {fecha:D(0), hora:'12:30', paciente:'Nicolás Herrera',  motivo:'Chequeo ejecutivo'},
+    {fecha:D(0), hora:'13:30', paciente:'Diego Funes',      motivo:'Control diabetes'},
+    {fecha:D(0), hora:'14:00', paciente:'Camila Montero',   motivo:'Control embarazo'},
+    {fecha:D(0), hora:'14:30', paciente:'Federico Sosa',    motivo:'Lesión de rodilla'},
+    {fecha:D(0), hora:'15:00', paciente:'Isabel Ramos',     motivo:'Control tiroides'},
+    {fecha:D(0), hora:'15:30', paciente:'Martín Villalba',  motivo:'Dolor cervical'},
+    {fecha:D(0), hora:'16:00', paciente:'Roberto Díaz',     motivo:'Consulta general'},
+    {fecha:D(0), hora:'17:00', paciente:'Claudia Peña',     motivo:'Segunda consulta'},
+    {fecha:D(0), hora:'17:30', paciente:'Sofía Bianchi',    motivo:'Primera consulta'},
+    {fecha:D(1), hora:'10:00', paciente:'Carlos Méndez',   motivo:'Pre-quirúrgico', privada:true},
+    {fecha:D(1), hora:'11:30', paciente:'Valentina Ruiz',  motivo:'Control post-op', sobreturno:true},
+    {fecha:D(1), hora:'15:00', paciente:'Pedro Almada',    motivo:'Chequeo anual'},
+    {fecha:D(2), hora:'09:00', paciente:'Isabel Ramos',    motivo:'Control tiroides'},
+    {fecha:D(2), hora:'11:00', paciente:'Elena Vargas',    motivo:'Consulta dolor lumbar'},
+    {fecha:D(3), hora:'10:30', paciente:'Martín Villalba', motivo:'Dolor cervical'},
+    {fecha:D(3), hora:'14:00', paciente:'Nicolás Herrera', motivo:'Chequeo ejecutivo', privada:true},
+    {fecha:D(4), hora:'09:30', paciente:'Marta Suárez',    motivo:'Control mensual'},
+    {fecha:D(5), hora:'16:00', paciente:'Carlos Méndez',   motivo:'Cirugía menor programada'},
+    {fecha:D(8), hora:'09:30', paciente:'Pedro Almada',    motivo:'Control post-tratamiento'}
+  ],
+  pacientes: [
+    {nombre:'Marta Suárez', tel:'11 5555-0101', mail:'marta.suarez@mail.com', etapa:'Retención', ultima:D(-30), nac:'1968-04-12', obra:'OSDE 210', alergias:'Ibuprofeno', obs:'Hipertensa crónica. No usar AINEs.', emergencia:'Carlos Suárez (esposo) · 11 4444-0101', desde:'2019-03-10',
+      historial:[
+        {fecha:D(-30), trat:'Control mensual', nota:'Presión 130/85. Continúa con enalapril 10 mg. Próximo control en 1 mes.'},
+        {fecha:D(-60), trat:'Control mensual', nota:'Presión estable. Se ajustó dieta hiposódica. Laboratorio en rango.'},
+        {fecha:D(-120), trat:'Ajuste de medicación', nota:'Subió enalapril de 5 mg a 10 mg por presión elevada sostenida (150/95).'},
+        {fecha:D(-365), trat:'Control anual', nota:'Chequeo completo. Todo dentro de parámetros. Se mantiene tratamiento.'}]},
+    {nombre:'Julián Pérez', tel:'11 5555-0102', mail:'julian.perez@mail.com', etapa:'Consultó', ultima:D(-2), nac:'1990-09-22', obra:'Swiss Medical', alergias:'Penicilina', obs:'Alérgico a penicilina — reacción anafiláctica documentada en 2018.', emergencia:'María Pérez (madre) · 11 4444-0102', desde:'2024-11-18',
+      historial:[
+        {fecha:D(-2), trat:'Primera consulta', nota:'Fatiga crónica, 3 meses de evolución. Se indicó laboratorio completo y plan nutricional. Pendiente resultado para siguiente turno.'}]},
+    {nombre:'Ana López', tel:'11 5555-0103', mail:'ana.lopez@mail.com', etapa:'En tratamiento', ultima:D(-8), nac:'1985-01-30', obra:'Galeno', alergias:'—', obs:'', emergencia:'Pablo López (hermano) · 11 4444-0103', desde:'2022-06-01',
+      historial:[
+        {fecha:D(-8),  trat:'Control cardiológico', nota:'Electro y ergometría realizados. Sin hallazgos patológicos. Resultados completos en próxima consulta.'},
+        {fecha:D(-15), trat:'Consulta', nota:'Palpitaciones ocasionales con ejercicio. Se indicaron estudios cardiológicos (electro + ergometría).'},
+        {fecha:D(-180), trat:'Control anual', nota:'Sin novedades. Presión y pulso normales. Control en 12 meses.'}]},
+    {nombre:'Carlos Méndez', tel:'11 5555-0104', mail:'cmendez@mail.com', etapa:'Sacó turno', ultima:D(-9), nac:'1972-11-05', obra:'Particular', alergias:'—', obs:'', emergencia:'Graciela Méndez (esposa) · 11 4444-0104', desde:'2023-08-22',
+      historial:[
+        {fecha:D(-9), trat:'Presupuesto cirugía', nota:'Lipoma en espalda (5 cm). Se presupuestó cirugía menor bajo anestesia local. Esperando respuesta del paciente.'},
+        {fecha:D(-45), trat:'Consulta', nota:'Derivado por médico clínico. Primera evaluación del lipoma. Sin síntomas, solo estético.'}]},
+    {nombre:'Lucía Fernández', tel:'11 5555-0105', mail:'lufernandez@mail.com', etapa:'Refirió', ultima:D(-1), nac:'1995-07-19', obra:'OSDE 310', alergias:'Látex', obs:'Alergia a látex — avisar antes de cualquier procedimiento.', emergencia:'Sandra Fernández (madre) · 11 4444-0105', desde:'2023-02-14',
+      historial:[
+        {fecha:D(-1), trat:'Chequeo preventivo anual', nota:'Todo en orden. Laboratorio completo sin observaciones. Dejó reseña en Google y refirió a su hermano Tomás.'},
+        {fecha:D(-365), trat:'Chequeo preventivo anual', nota:'Primera vez en la clínica. Se realizó chequeo general. Sin hallazgos.'}]},
+    {nombre:'Roberto Díaz', tel:'11 5555-0106', mail:'rdiaz@mail.com', etapa:'Contactó', ultima:D(-6), nac:'1980-03-02', obra:'IOMA', alergias:'—', obs:'', emergencia:'—', desde:'2025-12-01',
+      historial:[
+        {fecha:D(-6), trat:'Primera consulta', nota:'Dolor de cabeza recurrente, 2 semanas. Se indicó neurológico básico y tensión arterial. Sin hallazgos urgentes.'}]},
+    {nombre:'Jorge Castro', tel:'11 5555-0107', mail:'jcastro@mail.com', etapa:'En tratamiento', ultima:D(-14), nac:'1958-06-25', obra:'PAMI', alergias:'Aspirina', obs:'Hipertenso. No usar Aspirina. Antecedente de gastritis severa.', emergencia:'Mirta Castro (esposa) · 11 4444-0107', desde:'2020-09-05',
+      historial:[
+        {fecha:D(-14), trat:'Control de presión', nota:'Presión 145/95, se ajustó medicación — enalapril 10 mg + amlodipina 5 mg. Control en 2 semanas.'},
+        {fecha:D(-45), trat:'Control de presión', nota:'Presión 138/88. Responde bien al tratamiento. Se mantiene medicación.'},
+        {fecha:D(-120), trat:'Crisis hipertensiva', nota:'Ingresó con presión 170/110. Se medicó en consultorio. Derivado a guardia para observación. Alta a las 4 hs.'},
+        {fecha:D(-365), trat:'Chequeo anual', nota:'Diagnóstico de hipertensión. Inicio de tratamiento con enalapril 5 mg.'}]},
+    {nombre:'Diego Funes', tel:'11 5555-0108', mail:'dfunes@mail.com', etapa:'En tratamiento', ultima:D(-20), nac:'1975-12-08', obra:'OSDE 210', alergias:'—', obs:'Diabético tipo 2 desde 2021. Monitoreo glucémico frecuente.', emergencia:'Patricia Funes (esposa) · 11 4444-0108', desde:'2021-03-15',
+      historial:[
+        {fecha:D(-20), trat:'Control diabetes', nota:'HbA1c 7.2%. Continúa metformina 850 mg c/12h. Refuerzo de pautas alimentarias. Próximo control en 3 meses.'},
+        {fecha:D(-110), trat:'Control diabetes', nota:'HbA1c 7.8%. Se ajustó dosis de metformina. Plan de actividad física.'},
+        {fecha:D(-200), trat:'Control diabetes', nota:'Debut diabético confirmado. Inicio de tratamiento con metformina 500 mg.'}]},
+    {nombre:'Pedro Almada', tel:'11 5555-0109', mail:'palmada@mail.com', etapa:'Retención', ultima:D(-90), nac:'1965-02-17', obra:'Swiss Medical', alergias:'—', obs:'', emergencia:'Rosa Almada (esposa) · 11 4444-0109', desde:'2018-11-20',
+      historial:[
+        {fecha:D(-90), trat:'Chequeo anual', nota:'Sin hallazgos relevantes. Próximo chequeo en 12 meses (turno ya agendado).'},
+        {fecha:D(-450), trat:'Chequeo anual', nota:'Colesterol LDL levemente elevado. Se indicó dieta y control en 6 meses.'},
+        {fecha:D(-820), trat:'Chequeo anual', nota:'Primer chequeo en la clínica. Todo en rango normal para la edad.'}]},
+    {nombre:'Sofía Bianchi', tel:'11 5555-0110', mail:'sbianchi@mail.com', etapa:'Sacó turno', ultima:D(-3), nac:'1998-10-11', obra:'Galeno', alergias:'—', obs:'', emergencia:'Laura Bianchi (madre) · 11 4444-0110', desde:'2025-10-03',
+      historial:[
+        {fecha:D(-3), trat:'Consulta ginecológica', nota:'Primera consulta. Control de rutina. Sin novedades. Se agendó seguimiento anual.'}]},
+    {nombre:'Valeria Ríos', tel:'11 5555-0111', mail:'vrios@mail.com', etapa:'Consultó', ultima:D(-40), nac:'1988-05-03', obra:'Particular', alergias:'—', obs:'No volvió a control luego de la derivación a kinesiología.', emergencia:'—', desde:'2025-01-08',
+      historial:[
+        {fecha:D(-40), trat:'Consulta', nota:'Dolor lumbar crónico, zona L4-L5. Se indicó kinesiología (8 sesiones) y RX de columna. No volvió a control — hacer seguimiento.'}]},
+    {nombre:'Miguel Torres', tel:'11 5555-0112', mail:'mtorres@mail.com', etapa:'Contactó', ultima:D(-120), nac:'1982-08-29', obra:'IOMA', alergias:'—', obs:'', emergencia:'—', desde:'2025-02-28',
+      historial:[
+        {fecha:D(-120), trat:'Consulta telefónica', nota:'Consultó por dolor de rodilla. Se le explicó que necesitaba turno presencial. Aún no sacó turno.'}]},
+    {nombre:'Elena Vargas', tel:'11 5555-0113', mail:'evargas@mail.com', etapa:'Refirió', ultima:D(-25), nac:'1970-01-14', obra:'OSDE 310', alergias:'Sulfas', obs:'Alergia documentada a sulfas (sulfametoxazol). Reacción cutánea moderada.', emergencia:'Ricardo Vargas (esposo) · 11 4444-0113', desde:'2021-07-19',
+      historial:[
+        {fecha:D(-25), trat:'Chequeo general', nota:'Colesterol LDL 155 mg/dl (levemente elevado). Pautas dietarias. Refirió a compañera de trabajo.'},
+        {fecha:D(-390), trat:'Chequeo general', nota:'Sin hallazgos. Todos los valores en rango. Control en 12 meses.'}]},
+    {nombre:'Carmen Ruiz', tel:'11 5555-0114', mail:'cruiz@mail.com', etapa:'Retención', ultima:D(-130), nac:'1962-09-09', obra:'PAMI', alergias:'—', obs:'Artrosis de rodilla bilateral. No corre. Evitar ejercicio de alto impacto.', emergencia:'Jorge Ruiz (hijo) · 11 4444-0114', desde:'2017-05-12',
+      historial:[
+        {fecha:D(-130), trat:'Control artrosis', nota:'Artrosis rodilla bilateral. Infiltración con corticoide en rodilla derecha. Próximo control en 3 meses.'},
+        {fecha:D(-310), trat:'Control artrosis', nota:'Progresión leve. Se ajustó analgésico a paracetamol 1g c/8h. Kinesio 2x semana.'},
+        {fecha:D(-500), trat:'Diagnóstico artrosis', nota:'RX confirma gonartrosis grado II bilateral. Inicio de tratamiento conservador.'}]}
+  ],
+  finanzas: [
+    {id:1,  fecha:D(-1),  paciente:'Roberto Díaz',   tratamiento:'Consulta + análisis',         monto:150000,  presupuesto:'Aceptado',  pago:'No',   senia:0,      medio:'—',                 medico:'Dr. Martín Aguirre'},
+    {id:2,  fecha:D(-5),  paciente:'Marta Suárez',   tratamiento:'Plan control mensual',        monto:35000,   presupuesto:'Aceptado',  pago:'Sí',   senia:0,      medio:'Débito automático', medico:'Dr. Martín Aguirre'},
+    {id:3,  fecha:D(-8),  paciente:'Ana López',      tratamiento:'Estudios cardiológicos',      monto:440000,  presupuesto:'Aceptado',  pago:'Seña', senia:220000, medio:'Transferencia',     medico:'Dra. Laura Sosa'},
+    {id:4,  fecha:D(-9),  paciente:'Carlos Méndez',  tratamiento:'Cirugía menor',               monto:950000,  presupuesto:'Pendiente', pago:'No',   senia:0,      medio:'—',                 medico:'Dra. Laura Sosa'},
+    {id:5,  fecha:D(-20), paciente:'Julián Pérez',   tratamiento:'Plan nutricional anual',      monto:1200000, presupuesto:'Rechazado', pago:'No',   senia:0,      medio:'—',                 medico:'Dr. Martín Aguirre'},
+    {id:6,  fecha:D(-12), paciente:'Jorge Castro',   tratamiento:'Plan control mensual',        monto:35000,   presupuesto:'Aceptado',  pago:'Sí',   senia:0,      medio:'Efectivo',          medico:'Dr. Martín Aguirre'},
+    {id:7,  fecha:D(-15), paciente:'Diego Funes',    tratamiento:'Laboratorio completo',        monto:95000,   presupuesto:'Aceptado',  pago:'Sí',   senia:0,      medio:'Tarjeta',           medico:'Dra. Laura Sosa'},
+    {id:8,  fecha:D(-18), paciente:'Lucía Fernández',tratamiento:'Chequeo preventivo anual',   monto:280000,  presupuesto:'Aceptado',  pago:'Sí',   senia:0,      medio:'Transferencia',     medico:'Dr. Martín Aguirre'},
+    {id:9,  fecha:D(-22), paciente:'Pedro Almada',   tratamiento:'Consulta + análisis',         monto:150000,  presupuesto:'Aceptado',  pago:'Sí',   senia:0,      medio:'Efectivo',          medico:'Dra. Laura Sosa'},
+    {id:10, fecha:D(-25), paciente:'Sofía Bianchi',  tratamiento:'Estudios cardiológicos',      monto:440000,  presupuesto:'Rechazado', pago:'No',   senia:0,      medio:'—',                 medico:'Dra. Laura Sosa'},
+    {id:11, fecha:D(-3),  paciente:'Elena Vargas',   tratamiento:'Chequeo preventivo anual',   monto:280000,  presupuesto:'Aceptado',  pago:'Seña', senia:140000, medio:'Transferencia',     medico:'Dr. Martín Aguirre'},
+    {id:12, fecha:D(-7),  paciente:'Valeria Ríos',   tratamiento:'Plan control mensual',        monto:35000,   presupuesto:'Aceptado',  pago:'Sí',   senia:0,      medio:'Débito automático', medico:'Dr. Martín Aguirre'}
+  ],
+  gastos: [
+    {fecha:D(-10), categoria:'Alquiler',    concepto:'Alquiler consultorio',        monto:850000},
+    {fecha:D(-10), categoria:'Sueldos',     concepto:'Secretaria / recepción',      monto:650000},
+    {fecha:D(-10), categoria:'Sueldos',     concepto:'Enfermera (medio tiempo)',    monto:380000},
+    {fecha:D(-8),  categoria:'Expensas',    concepto:'Expensas + luz + internet',   monto:180000},
+    {fecha:D(-6),  categoria:'Proveedores', concepto:'Insumos descartables',        monto:120000},
+    {fecha:D(-5),  categoria:'Insumos',     concepto:'Medicación y vacunas',        monto:95000},
+    {fecha:D(-4),  categoria:'Maquinaria',  concepto:'Cuota ecógrafo (3/12)',       monto:240000},
+    {fecha:D(-3),  categoria:'Otros',       concepto:'Publicidad Instagram',        monto:60000}
+  ]
+};}
+
+let st;
+try{ st = JSON.parse(localStorage.getItem('mediflow_v3')) || estadoDemo(); }
+catch(e){ st = estadoDemo(); }
+function persistir(){ try{ localStorage.setItem('mediflow_v3', JSON.stringify(st)); }catch(e){} }
+function resetDemo(){ if(confirm('¿Volver a los datos de demostración? Se pierde todo lo cargado.')){ try{localStorage.removeItem('mediflow_v3');}catch(e){} location.reload(); } }
+
+/* ================== HELPERS ================== */
+const $ = id => document.getElementById(id);
+const money = n => '$' + Math.round(n).toLocaleString('es-AR');
+const pct = (a,b) => b>0 ? a/b*100 : 0;
+const OBJ = k => st.bench[k];
+function nivel(ratio){ return ratio>=1 ? 'ok' : ratio>=0.7 ? 'medio' : 'mal'; }
+function colorN(n){ return n==='ok'?'var(--verde)':n==='medio'?'var(--amarillo)':'var(--rojo)'; }
+function chip(ratio){ const n=nivel(ratio); const t=n==='ok'?'En objetivo':n==='medio'?'Por debajo':'Fuga crítica'; return `<span class="chip ${n}">${t}</span>`; }
+function fmtFecha(f){ const [y,m,d]=f.split('-'); return `${d}/${m}/${y.slice(2)}`; }
+function edad(nac){ if(!nac) return '—'; const n=new Date(nac+'T00:00'); let e=HOY.getFullYear()-n.getFullYear(); const cumple=new Date(HOY.getFullYear(),n.getMonth(),n.getDate()); if(HOY<cumple)e--; return e+' años'; }
+function esc(s){ return s.replace(/'/g,"\\'"); }
+function deudaDe(nombre){
+  return st.finanzas.filter(f=>f.paciente===nombre && f.presupuesto==='Aceptado')
+    .reduce((a,f)=> a + (f.pago==='Sí'?0 : f.pago==='Seña'?f.monto-f.senia : f.monto), 0);
+}
+function waLink(tel, msg){
+  const d=(tel||'').replace(/\D/g,'');
+  return `https://wa.me/${d?'549'+d:''}?text=${encodeURIComponent(msg)}`;
+}
+function waBtn(nombre, msg, txt){
+  const p = st.pacientes.find(x=>x.nombre===nombre);
+  return `<a class="btn wsp" target="_blank" href="${waLink(p?p.tel:'', msg)}">💬 ${txt||'WhatsApp'}</a>`;
+}
+function donut(p, color, centro, sub, tam=105){
+  const r=40, c=2*Math.PI*r, rel=Math.max(0,Math.min(p,100));
+  return `<svg viewBox="0 0 110 110" width="${tam}" height="${tam}">
+    <circle cx="55" cy="55" r="${r}" fill="none" stroke="#eef2f8" stroke-width="13"/>
+    <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"
+      stroke-dasharray="${c*rel/100} ${c}" transform="rotate(-90 55 55)"/>
+    <text x="55" y="54" text-anchor="middle" font-size="21" font-weight="800" fill="#1c2433">${centro}</text>
+    <text x="55" y="71" text-anchor="middle" font-size="9.5" fill="#64748b">${sub}</text></svg>`;
+}
+
+/* ================== CÁLCULOS ================== */
+function etapas(m){
+  return [
+    {key:null, label:'Contactaron', val:m.contactos, base:null},
+    {key:'turno',       label:'Sacaron turno',       val:m.turnos,       base:m.contactos},
+    {key:'asistencia',  label:'Asistieron',          val:m.asistencias,  base:m.turnos},
+    {key:'tratamiento', label:'En tratamiento',      val:m.tratamientos, base:m.asistencias},
+    {key:'retencion',   label:'Retención',           val:m.retenciones,  base:m.tratamientos},
+    {key:'referido',    label:'Refirieron / Reseña', val:m.referidos,    base:m.asistencias, nota:'de los atendidos'}
+  ];
+}
+function fugas(m){
+  const lista = [];
+  etapas(m).forEach(e=>{
+    if(!e.key) return;
+    const obj = OBJ(e.key);
+    const real = pct(e.val, e.base);
+    const ratio = obj>0 ? real/obj : 1;
+    const perdidos = Math.max(0, Math.round(e.base*obj/100) - e.val);
+    const tk = st.config.ticket||180000;
+    const bTrat = OBJ('tratamiento')||55;
+    const bAsist = OBJ('asistencia')||85;
+    const dinero =
+      e.key==='tratamiento' ? perdidos*tk :
+      e.key==='asistencia'  ? Math.round(perdidos*(bTrat/100)*tk) :
+      e.key==='turno'       ? Math.round(perdidos*(bAsist/100)*(bTrat/100)*tk) :
+      e.key==='retencion'   ? perdidos*tk :
+      e.key==='referido'    ? Math.round(perdidos*(bTrat/100)*tk) : 0;
+    lista.push({tipo:'conv', key:e.key, nombre:BENCH_META[e.key].nombre, real, obj, ratio, perdidos, dinero});
+  });
+  ['respuestaHs','demoraDias'].forEach(k=>{
+    const obj = OBJ(k);
+    const ratio = m[k]>0 ? Math.min(obj/m[k], 1.2) : 1.2;
+    lista.push({tipo:'tiempo', key:k, nombre:BENCH_META[k].nombre, real:m[k], obj, unidad:BENCH_META[k].unidad, ratio, perdidos:0, dinero:0});
+  });
+  return lista.sort((a,b)=>a.ratio-b.ratio);
+}
+
+/* ================== ROLES ================== */
+const TABS_C1 = [['hoy','🏠','Hoy'],['cal','📅','Calendario'],['pac','👥','Pacientes']];
+const TABS_C2 = [['hoy','🏠','Hoy'],['cal','📅','Calendario'],['pac','👥','Pacientes'],['diag','📊','Rendimiento'],['ia','🤖','Asistente IA'],['pagos','💳','Pagos'],['bal','⚖️','Balance'],['usr','👤','Usuario'],['set','⚙️','Ajustes']];
+let rolActual = null;
+function ingresar(rol){
+  rolActual = rol;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('rolInfo').style.display = 'flex';
+  document.getElementById('rolNombre').textContent = rol==='capa2' ? '📊 Dueño / Socio' : '🩺 Recepcionista / Médico';
+  document.body.classList.toggle('capa2', rol==='capa2');
+  tabActiva = 'hoy';
+  render();
+}
+
+/* ================== NAVEGACIÓN ================== */
+let tabActiva = 'hoy';
+function irA(t){ tabActiva=t; render(); window.scrollTo(0,0); }
+function tabsActuales(){ return rolActual==='capa2' ? TABS_C2 : TABS_C1; }
+function renderNav(){
+  const tabs = tabsActuales();
+  $('nav').innerHTML = tabs.map(([id,ico,n])=>`<button class="${tabActiva===id?'activa':''}" onclick="irA('${id}')"><span class="sb-icon">${ico}</span>${n}</button>`).join('');
+  [...document.querySelectorAll('.pestania')].forEach(s=>s.classList.remove('visible'));
+  if($('tab-'+tabActiva)) $('tab-'+tabActiva).classList.add('visible');
+}
+function toggleForm(){ const f=$('formCard'); f.style.display = f.style.display==='none'?'block':'none'; }
+
+function llenarSelectores(){
+  const sel = $('mesEst'), prev = sel.value;
+  sel.innerHTML = st.meses.map((m,i)=>`<option value="${i}">${m.nombre}</option>`).join('');
+  sel.value = prev !== '' && +prev < st.meses.length ? prev : st.meses.length-1;
+}
+function mesSel(){ return st.meses[+$('mesEst').value] || st.meses[st.meses.length-1]; }
+function mesAnterior(){ const i=+$('mesEst').value; return i>0 ? st.meses[i-1] : null; }
+
+/* ================== HOY ================== */
+function alertas(){
+  const out = [];
+
+  // URGENTE — confirmaciones para mañana
+  st.turnosCal.filter(t=>t.fecha===D(1)).forEach(t=>{
+    out.push({nivel:1, hoy:true, tipo:'CONFIRMAR TURNO', paciente:t.paciente,
+      txt:`turno mañana a las ${t.hora} — ${t.motivo}. Pendiente de confirmación.`,
+      msg:`Hola ${t.paciente.split(' ')[0]}! Te recordamos tu turno de mañana a las ${t.hora} en ${st.clinica.nombre}. ¿Confirmás tu asistencia? ¡Gracias!`});
+  });
+
+  // URGENTE — presupuestos sin respuesta > 48 h
+  st.finanzas.filter(f=>f.presupuesto==='Pendiente').forEach(f=>{
+    const dias = Math.floor((HOY - new Date(f.fecha+'T00:00'))/86400000);
+    if(dias>=2) out.push({nivel:1, hoy:true, tipo:'PRESUPUESTO', paciente:f.paciente,
+      txt:`presupuesto de ${f.tratamiento} sin respuesta hace ${dias} días.`,
+      msg:`Hola ${f.paciente.split(' ')[0]}! ¿Pudiste ver el presupuesto de ${f.tratamiento}? Cualquier duda te la respondemos, también lo podemos coordinar en cuotas. Saludos de ${st.clinica.nombre}!`});
+  });
+
+  // IMPORTANTE — en tratamiento sin próxima consulta agendada
+  st.pacientes.filter(p=>p.etapa==='En tratamiento').forEach(p=>{
+    const tieneProximo = st.turnosCal.some(t=>t.paciente===p.nombre && t.fecha>hoyStr());
+    if(!tieneProximo) out.push({nivel:2, hoy:false, tipo:'SEGUIMIENTO', paciente:p.nombre,
+      txt:`en tratamiento activo sin próxima consulta agendada.`,
+      msg:`Hola ${p.nombre.split(' ')[0]}! Queríamos coordinar tu próxima consulta de seguimiento en ${st.clinica.nombre}. ¿Cuándo te queda cómodo?`});
+  });
+
+  // IMPORTANTE — pacientes que consultaron y nunca sacaron turno
+  st.pacientes.filter(p=>p.etapa==='Contactó').forEach(p=>{
+    out.push({nivel:2, hoy:false, tipo:'SIN TURNO', paciente:p.nombre,
+      txt:`consultó pero nunca agendó una cita.`,
+      msg:`Hola ${p.nombre.split(' ')[0]}! Nos habías consultado en ${st.clinica.nombre} y queríamos saber si seguís interesado/a. Tenemos turnos disponibles esta semana. ¿Te reservo uno?`});
+  });
+
+  // INFO — pacientes inactivos > 90 días
+  st.pacientes.forEach(p=>{
+    const dias = Math.floor((HOY - new Date(p.ultima+'T00:00'))/86400000);
+    if(dias>90 && p.etapa!=='Contactó') out.push({nivel:3, hoy:false, tipo:'INACTIVO', paciente:p.nombre,
+      txt:`sin visitas hace ${dias} días. Buen momento para un control.`,
+      msg:`Hola ${p.nombre.split(' ')[0]}! Hace un tiempo que no te vemos en ${st.clinica.nombre}. ¿Querés que te reservemos un turno de control?`});
+  });
+
+  return out.sort((a,b)=>a.nivel-b.nivel).slice(0,10);
+}
+
+function renderHoy(){
+  $('hoyTitulo').textContent = 'Hola, ' + st.doctor.nombre + ' 👋';
+
+  const ts = st.turnosCal.filter(t=>t.fecha===hoyStr()).sort((a,b)=>a.hora.localeCompare(b.hora));
+  const als = alertas();
+  const horas = st.config.horaFin - st.config.horaIni + 1;
+  const atendidos = ts.filter(t=>t.checkin==='listo').length;
+  const urgentes = als.filter(a=>a.hoy).length;
+  const horaInicio = ts.length ? ts[0].hora : '—';
+  const horaFin = ts.length ? ts[ts.length-1].hora : '—';
+
+  // KPIs
+  const totalSlots = (st.config.horaFin - st.config.horaIni) * 2; // bloques de 30 min
+  $('kpisHoy').innerHTML = `
+    <div class="kpi">
+      <div class="et">Turnos hoy</div>
+      <div class="num">${ts.length}</div>
+      <div class="extra">${ts.length ? horaInicio+' — '+horaFin+' · '+(totalSlots-ts.length)+' bloques libres' : 'Agenda libre'}</div>
+    </div>
+    <div class="kpi">
+      <div class="et">Pacientes atendidos</div>
+      <div class="num" style="color:var(--verde)">${atendidos}</div>
+      <div class="extra">${ts.length-atendidos} por atender</div>
+    </div>
+    <div class="kpi ${urgentes>0?'naranja':''}">
+      <div class="et">Pendientes</div>
+      <div class="num">${als.length}</div>
+      <div class="extra">${urgentes} para hoy</div>
+    </div>`;
+
+  // Agenda con bloques de 30 minutos
+  let agendaHtml = '';
+  for(let h=st.config.horaIni; h<st.config.horaFin; h++){
+    for(let m=0; m<60; m+=30){
+      const slot = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const turno = ts.find(t=>t.hora===slot);
+      if(turno){
+        const idx = st.turnosCal.indexOf(turno);
+        const p = st.pacientes.find(x=>x.nombre===turno.paciente) || {};
+        const ci = turno.checkin;
+        const inf = [p.nac?edad(p.nac):null, p.obra&&p.obra!=='—'?p.obra:null, turno.motivo].filter(Boolean).join(' · ');
+        const wMsg = `Hola ${turno.paciente.split(' ')[0]}! Te recordamos tu turno de hoy a las ${turno.hora} en ${st.clinica.nombre}. ¡Te esperamos!`;
+        const wHref = waLink(p.tel, wMsg);
+        agendaHtml += `<div class="ta-row">
+          <div class="ta-hora">${slot}</div>
+          <div>
+            <div class="ta-nombre" onclick="verFicha('${esc(turno.paciente)}')">${turno.paciente}</div>
+            <div class="ta-info">${inf}</div>
+          </div>
+          <div class="ta-acciones">
+            <button class="ci-btn ${ci==='sala'?'sala':''}" onclick="setCheckin(${idx},'sala')">En sala</button>
+            <button class="ci-btn ${ci==='consulta'?'consulta':''}" onclick="setCheckin(${idx},'consulta')">En consulta</button>
+            <button class="ci-btn ${ci==='listo'?'listo':''}" onclick="setCheckin(${idx},'listo')">✓ Atendido</button>
+            <button class="nota-btn" onclick="abrirNotaClinica('${esc(turno.paciente)}','${turno.fecha}')">🎙 Nota clínica</button>
+            <button class="receta-btn" onclick="abrirReceta('${esc(turno.paciente)}','${turno.fecha}')">📋 Receta</button>
+            <a class="rec-btn" href="${wHref}" target="_blank">Recordatorio</a>
+          </div>
+        </div>`;
+      } else {
+        agendaHtml += `<div class="ta-row">
+          <div class="ta-hora" style="color:#b6c2d4">${slot}</div>
+          <div style="flex:1">
+            <div class="bache" style="display:inline-block" onclick="abrirModal('turno','${hoyStr()}','${slot}')">+ Libre — agendar turno</div>
+          </div>
+        </div>`;
+      }
+    }
+  }
+  $('agendaHoy').innerHTML = agendaHtml;
+
+  // Pendientes (título dentro del bloque)
+  if(!als.length){
+    $('pendientesHoy').innerHTML = '<p style="color:var(--gris);font-size:13.5px;padding:4px 0">Sin pendientes. 🎉</p>';
+    return;
+  }
+  $('pendientesHoy').innerHTML = `
+    <div class="pend-bloque">
+      <div style="padding:16px 18px 10px;border-bottom:1px solid #eef0f4">
+        <h3 style="font-size:15px;font-weight:700;margin:0">📌 Pendientes</h3>
+      </div>
+      ${als.map(a=>`<div class="pend-item">
+        <div class="pend-dot ${a.nivel===1?'u':''}"></div>
+        <div style="flex:1">
+          <div class="pend-txt">
+            <strong><span class="link" onclick="verFicha('${esc(a.paciente)}')">${a.paciente}</span></strong>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-left:8px">${a.tipo}</span>
+          </div>
+          <div class="pend-sub">${a.txt}</div>
+          ${a.msg?`<div style="margin-top:7px"><a class="rec-btn" href="${waLink(a.paciente? (st.pacientes.find(x=>x.nombre===a.paciente)||{}).tel||'': '',a.msg)}" target="_blank">💬 WhatsApp</a></div>`:''}
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+
+/* ================== RENDIMIENTO ================== */
+function renderDiag(){
+  const cab = ['Mes','Contactos','Turnos','Asistencias','Tratamientos','Retenciones','Referidos',''];
+  $('tablaMeses').innerHTML = `<tr>${cab.map(c=>`<th>${c}</th>`).join('')}</tr>` +
+    st.meses.map((x,i)=>`<tr>
+      <td><strong>${x.nombre}</strong></td><td>${x.contactos}</td><td>${x.turnos}</td><td>${x.asistencias}</td>
+      <td>${x.tratamientos}</td><td>${x.retenciones}</td><td>${x.referidos}</td>
+      <td><button class="btn peligro" onclick="borrarMes(${i})">✕</button></td></tr>`).join('');
+
+  const m = mesSel();
+  if($('rend-mes-lbl')) $('rend-mes-lbl').textContent = m ? m.nombre : '—';
+  const noData = '<p style="color:var(--gris);font-size:13px;padding:10px 0">Cargá datos con el botón ✎ Cargar datos.</p>';
+  if(!m){
+    ['rend-top3','rend-opp','rend-flujo-blk','rend-servicios','rend-origen'].forEach(id=>{ if($(id)) $(id).innerHTML=noData; });
+    return;
+  }
+  const prev = mesAnterior();
+  const ticket = st.config.ticket||180000;
+  const fs = fugas(m);
+  const fsConv = fs.filter(f=>f.tipo==='conv');
+
+  /* ============ B1: TOP 3 MÉTRICAS EJECUTIVAS ============ */
+  const salud = fs.reduce((a,f)=>a+Math.min(f.ratio,1),0)/fs.length*100;
+  let saludPrev=null;
+  if(prev){ const fp=fugas(prev); saludPrev=fp.reduce((a,f)=>a+Math.min(f.ratio,1),0)/fp.length*100; }
+  const dSalud = saludPrev!==null ? salud-saludPrev : null;
+  const dSaludCol = dSalud===null?'#475569':dSalud>=0?'#34d399':'#f87171';
+  const aceptados = st.finanzas.filter(f=>f.presupuesto==='Aceptado');
+  const facTotal = aceptados.reduce((a,f)=>a+f.monto,0);
+  const sinConvertir = Math.max(0, m.asistencias - m.tratamientos);
+  const perdidaEco = sinConvertir * ticket;
+  if($('rend-top3')) $('rend-top3').innerHTML = `
+    <div class="exec-top3">
+      <div class="exec-idx">
+        <div class="exec-idx-lab">ÍNDICE DE RENDIMIENTO</div>
+        <div class="exec-idx-num">${salud.toFixed(0)}<span style="font-size:26px;font-weight:700">%</span></div>
+        <div class="exec-idx-track"><div class="exec-idx-fill" style="width:${Math.min(salud,100).toFixed(0)}%"></div></div>
+        <div class="exec-idx-var" style="color:${dSaludCol}">
+          ${dSalud===null?'Sin dato anterior':dSalud>=0?'▲ +'+Math.abs(dSalud).toFixed(0)+' pts vs mes anterior':'▼ −'+Math.abs(dSalud).toFixed(0)+' pts vs mes anterior'}
+        </div>
+        <div class="exec-idx-sub">Promedio ponderado: conversión · asistencia · retención · referidos</div>
+      </div>
+      <div class="exec-metric pos">
+        <div class="exec-metric-lab">FACTURACIÓN DEL MES</div>
+        <div class="exec-metric-num">${money(facTotal)}</div>
+        <div class="exec-metric-sub">${aceptados.length} tratamientos aceptados</div>
+      </div>
+      <div class="exec-metric alerta">
+        <div class="exec-metric-lab">POTENCIAL PERDIDO</div>
+        <div class="exec-metric-num">${money(perdidaEco)}</div>
+        <div class="exec-metric-sub">${sinConvertir} consultas sin convertir · ticket promedio ${money(ticket)}</div>
+      </div>
+    </div>`;
+
+  /* ============ MAYOR OPORTUNIDAD ============ */
+  const mayorOpp = [...fsConv].sort((a,b)=>b.dinero-a.dinero)[0];
+  if($('rend-opp')){
+    if(mayorOpp && mayorOpp.dinero > 0){
+      const estr = ESTRATEGIAS.find(s=>s.key===mayorOpp.key);
+      const gap = (mayorOpp.real - mayorOpp.obj).toFixed(0);
+      $('rend-opp').innerHTML = `
+        <div class="rend-oportunidad">
+          <div>
+            <div class="rend-opp-badge">MAYOR OPORTUNIDAD DETECTADA</div>
+            <div class="rend-opp-tit">${mayorOpp.nombre}</div>
+            <div class="rend-opp-stats">
+              <span class="rend-opp-pct">${mayorOpp.real.toFixed(0)}%</span>
+              <span class="rend-opp-sep">/</span>
+              <span class="rend-opp-obj">Objetivo ${mayorOpp.obj}%</span>
+              <span class="rend-opp-gap">${+gap>=0?'+':''}${gap} pts</span>
+            </div>
+            <div class="rend-opp-sub">+${mayorOpp.perdidos} tratamientos potenciales · ${money(mayorOpp.dinero)} recuperables</div>
+            ${estr?'<button class="btn mini" style="margin-top:12px" onclick="irA(\'ia\')">Estrategia: '+estr.titulo+' →</button>':''}
+          </div>
+          <div class="rend-opp-dinero-wrap">
+            <div class="rend-opp-dinero">${money(mayorOpp.dinero)}</div>
+            <div class="rend-opp-dlbl">Potencial<br>recuperable</div>
+          </div>
+        </div>`;
+    } else $('rend-opp').innerHTML='';
+  }
+
+  /* ============ B2: FLUJO DEL PACIENTE EJECUTIVO ============ */
+  const E = etapas(m);
+  const steps = E.map((e,i)=>{
+    const perdidos = i>0 ? E[i-1].val - e.val : 0;
+    const conv = i>0 ? pct(e.val, E[i-1].val) : null;
+    const obj = e.key ? OBJ(e.key) : null;
+    const niv = (conv!==null && obj) ? nivel(conv/obj) : 'ok';
+    const fuga = e.key ? fsConv.find(f=>f.key===e.key) : null;
+    return {...e, perdidos, conv, obj, niv, dineroStep: fuga ? fuga.dinero : 0};
+  });
+  let mayorIdx=-1, mayorDinero=0;
+  steps.forEach((s,i)=>{ if(i>0 && s.dineroStep>mayorDinero){ mayorDinero=s.dineroStep; mayorIdx=i; } });
+
+  /* SVG Sankey-style funnel */
+  const N = steps.length;
+  const svgW = 900, svgH = 320;
+  const colW = svgW / N;
+  const boxW = colW * 0.60;
+  const bxL = ii => ii * colW + (colW - boxW) / 2;
+  const bxR = ii => bxL(ii) + boxW;
+  const headerH = 50, footerH = 54;
+  const bandAreaH = svgH - headerH - footerH;
+  const maxBandH = bandAreaH * 0.84, minBandH = 20;
+  const maxVal = steps[0].val;
+  const bH = v => Math.max(minBandH, (v / maxVal) * maxBandH);
+  const bY = v => headerH + (bandAreaH - bH(v)) / 2;
+  const cxS = ii => ii * colW + colW / 2;
+  function stageCol(s, i){
+    if(i===0) return '#1a66ff';
+    return s.niv==='ok' ? '#1a66ff' : s.niv==='medio' ? '#d97706' : '#dc2626';
+  }
+  function stageFlowCol(s, i){
+    if(i===0) return 'rgba(26,102,255,0.28)';
+    return s.niv==='ok' ? 'rgba(26,102,255,0.28)' : s.niv==='medio' ? 'rgba(217,119,6,0.28)' : 'rgba(220,38,38,0.28)';
+  }
+
+  let svgParts = [];
+  // Background
+  svgParts.push(`<rect width="${svgW}" height="${svgH}" fill="#0e1833"/>`);
+  // Column dividers
+  for(let i=1;i<N;i++) svgParts.push(`<line x1="${i*colW}" y1="${headerH-10}" x2="${i*colW}" y2="${svgH-footerH+10}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`);
+
+  // Connecting bezier flows (drawn before boxes so boxes sit on top)
+  for(let i=0;i<N-1;i++){
+    const s=steps[i], sn=steps[i+1];
+    const x1=bxR(i), x2=bxL(i+1), midX=(x1+x2)/2;
+    const top1=bY(s.val), bot1=top1+bH(s.val);
+    const top2=bY(sn.val), bot2=top2+bH(sn.val);
+    svgParts.push(`<path d="M${x1},${top1} C${midX},${top1} ${midX},${top2} ${x2},${top2} L${x2},${bot2} C${midX},${bot2} ${midX},${bot1} ${x1},${bot1} Z" fill="${stageFlowCol(sn,i+1)}"/>`);
+  }
+
+  // Stage boxes + text
+  steps.forEach((s,i)=>{
+    const xl=bxL(i), h=bH(s.val), y=bY(s.val), mid=y+h/2;
+    const col=stageCol(s,i), cxi=cxS(i);
+    const fs = h>60?26:h>38?18:13;
+    const esMayor = i===mayorIdx;
+
+    // Box
+    svgParts.push(`<rect x="${xl}" y="${y}" width="${boxW}" height="${h}" fill="${col}" rx="5"/>`);
+    if(esMayor) svgParts.push(`<rect x="${xl-2}" y="${y-2}" width="${boxW+4}" height="${h+4}" fill="none" stroke="#f87171" stroke-width="2" rx="6" stroke-dasharray="4 3"/>`);
+
+    // Label (top)
+    svgParts.push(`<text x="${cxi}" y="${headerH-15}" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="9" font-weight="800" letter-spacing="1.2" font-family="system-ui,sans-serif">${s.label.toUpperCase()}</text>`);
+
+    // Patient count (center of box)
+    svgParts.push(`<text x="${cxi}" y="${mid+fs*0.38}" text-anchor="middle" fill="white" font-size="${fs}" font-weight="900" font-family="system-ui,sans-serif">${s.val}</text>`);
+
+    // Footer: % real + obj%
+    const fy1=svgH-footerH+18, fy2=svgH-footerH+33;
+    if(s.conv!==null){
+      const convCol=s.niv==='ok'?'#34d399':s.niv==='medio'?'#fbbf24':'#f87171';
+      const gap=s.obj?(s.conv-s.obj).toFixed(0):null;
+      svgParts.push(`<text x="${cxi}" y="${fy1}" text-anchor="middle" fill="${convCol}" font-size="13" font-weight="900" font-family="system-ui,sans-serif">${s.conv.toFixed(0)}%${gap!==null?' ('+(+gap>=0?'+':'')+gap+' pts)':''}</text>`);
+      if(s.obj) svgParts.push(`<text x="${cxi}" y="${fy2}" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9.5" font-family="system-ui,sans-serif">obj. ${s.obj}%</text>`);
+    } else {
+      svgParts.push(`<text x="${cxi}" y="${fy1}" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="11" font-weight="700" font-family="system-ui,sans-serif">100% base</text>`);
+    }
+
+    // Lost patients label (on connector, if any)
+    if(i>0 && s.perdidos>0){
+      const lx=(bxR(i-1)+bxL(i))/2;
+      const ly=bY(s.val)-10;
+      const lCol=esMayor?'#f87171':'rgba(255,255,255,0.35)';
+      svgParts.push(`<text x="${lx}" y="${ly}" text-anchor="middle" fill="${lCol}" font-size="9.5" font-weight="700" font-family="system-ui,sans-serif">−${s.perdidos}${esMayor?' ★':''}</text>`);
+    }
+  });
+
+  const flujoSVG=`<svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:10px;overflow:hidden">${svgParts.join('')}</svg>`;
+
+  if($('rend-flujo-blk')) $('rend-flujo-blk').innerHTML = `
+    <div class="exec-flujo-wrap">
+      <div class="exec-flujo-tit">FLUJO DE CONVERSIÓN DEL PACIENTE</div>
+      ${flujoSVG}
+      <div style="margin-top:12px;font-size:11.5px;color:var(--gris)">
+        ★ Mayor fuga · % = conversión respecto a etapa anterior · (pts) = diferencia vs objetivo
+        ${mayorOpp&&mayorOpp.dinero>0?` · <strong style="color:var(--rojo)">${money(mayorOpp.dinero)}</strong> potencial recuperable en mayor fuga`:''}
+      </div>
+    </div>`;
+
+  /* ============ B3: RENDIMIENTO POR SERVICIO (unificado) ============ */
+  const SERV = st.servicios || [
+    {nombre:'Implantes',       diagnosticos:40, iniciados:24, facturacion:4500000},
+    {nombre:'Ortodoncia',      diagnosticos:25, iniciados:9,  facturacion:2800000},
+    {nombre:'Estética dental', diagnosticos:15, iniciados:11, facturacion:1650000},
+    {nombre:'Endodoncia',      diagnosticos:18, iniciados:14, facturacion:840000},
+    {nombre:'Limpiezas',       diagnosticos:60, iniciados:52, facturacion:520000},
+    {nombre:'Urgencias',       diagnosticos:22, iniciados:20, facturacion:400000},
+    {nombre:'Pediatría',       diagnosticos:12, iniciados:10, facturacion:300000}
+  ];
+  const servOrd = [...SERV].sort((a,b)=>b.facturacion-a.facturacion);
+  const benchTratObj = OBJ('tratamiento')||55;
+  const totalFacServ = servOrd.reduce((a,s)=>a+s.facturacion,0)||1;
+  const svcRows = servOrd.map((s,i)=>{
+    const cv=pct(s.iniciados,s.diagnosticos);
+    const gap=(cv-benchTratObj).toFixed(0);
+    const cc=cv>=benchTratObj?'var(--verde)':cv>=(benchTratObj*.7)?'var(--amarillo)':'var(--rojo)';
+    const barW=Math.min(cv/benchTratObj*100,100).toFixed(0);
+    return `<div class="exec-svc-grid exec-svc-row">
+      <div class="exec-rk">${i+1}</div>
+      <div class="exec-svc-nom">${s.nombre}</div>
+      <div class="exec-cnt hide-sm">${s.diagnosticos}</div>
+      <div class="exec-cnt hide-sm">${s.iniciados}</div>
+      <div>
+        <div class="exec-svc-conv-pct" style="color:${cc}">${cv.toFixed(0)}%</div>
+        <div class="exec-svc-conv-bar"><div class="exec-svc-conv-fill" style="width:${barW}%;background:${cc}"></div></div>
+      </div>
+      <div class="exec-gap-v" style="color:${+gap>=0?'var(--verde)':'var(--rojo)'}">${+gap>=0?'+':''}${gap}</div>
+      <div class="exec-fac">${money(s.facturacion)}</div>
+    </div>`;
+  }).join('');
+  if($('rend-servicios')) $('rend-servicios').innerHTML = `
+    <div class="exec-svc-wrap">
+      <div class="exec-svc-tit">RENDIMIENTO POR SERVICIO — objetivo conversión: ${benchTratObj}%</div>
+      <div class="exec-svc-grid exec-svc-hd">
+        <div class="exec-col-h"></div>
+        <div class="exec-col-h">Servicio</div>
+        <div class="exec-col-h hide-sm" style="text-align:center">Diag.</div>
+        <div class="exec-col-h hide-sm" style="text-align:center">Inic.</div>
+        <div class="exec-col-h">Conversión</div>
+        <div class="exec-col-h" style="text-align:center">Gap</div>
+        <div class="exec-col-h" style="text-align:right">Facturación</div>
+      </div>
+      ${svcRows}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:2px solid var(--borde);margin-top:4px">
+        <div style="font-size:12px;font-weight:700;color:var(--gris);letter-spacing:.5px;text-transform:uppercase">Total</div>
+        <div style="font-size:16px;font-weight:900;font-variant-numeric:tabular-nums">${money(totalFacServ)}</div>
+      </div>
+    </div>`;
+
+  /* ============ B4: ORIGEN DE PACIENTES ============ */
+  const rawOrig = m.origen || {};
+  const origenItems = [
+    {label:'Referidos',key:'referidos',color:'var(--verde)'},
+    {label:'Google',key:'google',color:'var(--azul)'},
+    {label:'Instagram',key:'instagram',color:'#a855f7'},
+    {label:'Web',key:'web',color:'var(--azul-osc)'},
+    {label:'Otros',key:'otros',color:'#94a3b8'},
+  ];
+  const orig = {};
+  origenItems.forEach(o=>{
+    const v=rawOrig[o.key];
+    orig[o.key]=v==null?{pac:0,trat:0,fac:0}:typeof v==='number'?{pac:v,trat:0,fac:0}:{pac:v.pac||0,trat:v.trat||0,fac:v.fac||0};
+  });
+  const maxFacOrig = Math.max(...origenItems.map(o=>orig[o.key].fac),1);
+  const totalFacOrig = origenItems.reduce((a,o)=>a+orig[o.key].fac,0)||1;
+  const origRows = origenItems.map(o=>{
+    const d=orig[o.key];
+    const barW=(d.fac/maxFacOrig*100).toFixed(0);
+    const cv=d.pac>0?pct(d.trat,d.pac):0;
+    const cc=cv>=40?'var(--verde)':cv>=20?'var(--amarillo)':'var(--rojo)';
+    return `<div class="exec-orig-grid exec-orig-row">
+      <div class="exec-orig-canal">${o.label}</div>
+      <div class="exec-orig-n">${d.pac}</div>
+      <div>
+        <div class="exec-orig-bar-lbl">
+          <span class="exec-orig-bar-monto">${money(d.fac)}</span>
+          <span class="exec-orig-bar-pct">${(d.fac/totalFacOrig*100).toFixed(0)}%</span>
+        </div>
+        <div class="exec-orig-bar-wrap"><div class="exec-orig-bar-fill" style="width:${barW}%;background:${o.color}"></div></div>
+      </div>
+      <div class="exec-orig-conv" style="color:${cc}">${cv.toFixed(0)}%<div style="font-size:9.5px;color:var(--gris);font-weight:600">conv.</div></div>
+    </div>`;
+  }).join('');
+  if($('rend-origen')) $('rend-origen').innerHTML = `
+    <div class="exec-orig-wrap">
+      <div class="exec-orig-tit">ORIGEN DE PACIENTES</div>
+      <div class="exec-orig-grid exec-orig-hd">
+        <div class="exec-col-h">Canal</div>
+        <div class="exec-col-h" style="text-align:center">Pacientes</div>
+        <div class="exec-col-h">Facturación generada</div>
+        <div class="exec-col-h" style="text-align:right">Conversión</div>
+      </div>
+      ${origRows}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;border-top:2px solid var(--borde);margin-top:4px">
+        <div style="font-size:12px;font-weight:700;color:var(--gris);letter-spacing:.5px;text-transform:uppercase">Total</div>
+        <div style="font-size:16px;font-weight:900;font-variant-numeric:tabular-nums">${money(totalFacOrig)}</div>
+      </div>
+    </div>`;
+}
+
+function guardarMes(){
+  const nombre = $('f_mes').value.trim();
+  if(!nombre){ alert('Poné el nombre del mes (ej: Julio 2026)'); return; }
+  const num = id => Math.max(0, +($(id).value || 0));
+  const datos = {
+    nombre, contactos:num('f_contactos'), turnos:num('f_turnos'), asistencias:num('f_asistencias'),
+    tratamientos:num('f_tratamientos'), retenciones:num('f_retenciones'), referidos:num('f_referidos'),
+    respuestaHs:num('f_respuestaHs'), demoraDias:num('f_demoraDias')
+  };
+  const ix = st.meses.findIndex(m=>m.nombre.toLowerCase()===nombre.toLowerCase());
+  if(ix>=0) st.meses[ix] = {...st.meses[ix], ...datos}; else st.meses.push({id:Date.now(), ...datos});
+  persistir();
+  ['f_mes','f_contactos','f_turnos','f_asistencias','f_tratamientos','f_retenciones','f_referidos','f_respuestaHs','f_demoraDias'].forEach(id=>$(id).value='');
+  llenarSelectores();
+  $('mesEst').value = st.meses.length-1;
+  render();
+}
+function borrarMes(i){ if(confirm('¿Eliminar '+st.meses[i].nombre+'?')){ st.meses.splice(i,1); persistir(); llenarSelectores(); render(); } }
+
+/* ================== ASISTENTE IA ================== */
+function renderIA(){
+  const m = st.meses[st.meses.length-1];
+  const malas = m ? fugas(m).filter(f=>nivel(f.ratio)!=='ok').map(f=>f.key) : [];
+  $('estrategias').innerHTML = ESTRATEGIAS.map(s=>{
+    const reco = malas.includes(s.key) || (s.key==='turno' && malas.includes('respuestaHs'));
+    return `<div class="estr ${reco?'reco':''}">
+      <div class="cab">
+        <div><span class="ico">${s.ico}</span></div>
+        ${reco?'<span class="badge-reco">⚠ RECOMENDADO PARA TU CLÍNICA</span>':''}
+      </div>
+      <h4>${s.titulo}</h4>
+      <div class="fg">Soluciona: ${s.fuga}</div>
+      <div class="desc">${s.desc}</div>
+      <ul>${s.pasos.map(p=>`<li>${p}</li>`).join('')}</ul>
+      <div class="imp">📈 ${s.imp}</div>
+      ${s.demo
+        ? `<button class="btn verde" onclick="abrirDemoIA()">▶ Probar demo en vivo</button>`
+        : `<button class="btn sec" onclick="alert('En el producto real, esta automatización se activa desde acá.')">Activar</button>`}
+    </div>`;
+  }).join('');
+}
+
+/* ================== CALENDARIO ================== */
+let calFecha = new Date(HOY);
+let calVista = 'mes';
+const MESES_N = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_N = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+// Feriados: formato YYYY-MM-DD → nombre
+const FERIADOS = {
+  [D(6)]: 'Feriado',   // Lunes 22 de junio
+};
+function setVista(v){ calVista=v; render(); }
+function moverCal(d){
+  if(calVista==='mes') calFecha.setMonth(calFecha.getMonth()+d);
+  else if(calVista==='sem') calFecha.setDate(calFecha.getDate()+7*d);
+  else calFecha.setDate(calFecha.getDate()+d);
+  render();
+}
+function turnosDe(fecha){ return st.turnosCal.filter(t=>t.fecha===fecha).sort((a,b)=>a.hora.localeCompare(b.hora)); }
+function turnitoHTML(t){
+  const cls = t.sobreturno ? 'sobreturno' : t.privada ? 'privada' : t.ia ? 'ia' : '';
+  const tooltip = `${t.hora} ${t.paciente} — ${t.motivo}${t.sobreturno?' · Sobreturno':t.privada?' · Privada':''}`;
+  return `<div class="turnito ${cls}" title="${tooltip}"
+    onclick="event.stopPropagation();verFicha('${esc(t.paciente)}')">${t.hora} ${t.paciente}</div>`;
+}
+
+function slotLibresDelDia(fecha){
+  const ocupados = new Set(st.turnosCal.filter(t=>t.fecha===fecha).map(t=>t.hora));
+  const libres = [];
+  for(let h=st.config.horaIni; h<st.config.horaFin; h++)
+    for(let m=0;m<60;m+=30){
+      const s = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      if(!ocupados.has(s)) libres.push(s);
+    }
+  return libres;
+}
+
+function renderCalKpis(){
+  const lun = new Date(HOY); lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
+  const dom = new Date(lun); dom.setDate(dom.getDate()+6);
+  const semana = st.turnosCal.filter(t=>t.fecha>=fechaStr(lun)&&t.fecha<=fechaStr(dom));
+  const total = semana.length;
+  const sobre = semana.filter(t=>t.sobreturno).length;
+  const priv  = semana.filter(t=>t.privada).length;
+  $('calKpis').innerHTML = `
+    <div class="cal-kpi">
+      <div class="et">Turnos esta semana</div>
+      <div class="num">${total}</div>
+    </div>
+    <div class="cal-kpi naranja-kpi">
+      <div class="et">Sobreturnos</div>
+      <div class="num">${sobre}</div>
+    </div>
+    <div class="cal-kpi violeta-kpi">
+      <div class="et">Consultas privadas</div>
+      <div class="num">${priv}</div>
+    </div>`;
+}
+
+function renderDisponibles(){
+  const DIAS_DISP = 14;
+  const slots = [];
+  for(let d=0; d<DIAS_DISP; d++){
+    const f = new Date(HOY); f.setDate(f.getDate()+d);
+    const dow = f.getDay();
+    if(dow===0||dow===6) continue;
+    const fecha = fechaStr(f);
+    if(FERIADOS[fecha]) continue;
+    const libres = slotLibresDelDia(fecha);
+    libres.forEach(slot => slots.push({fecha, slot}));
+  }
+  const mostrar = slots.slice(0,8);
+  if($('dispBadge')) $('dispBadge').textContent = `${slots.length} disponibles`;
+  if(!$('dispGrid')) return;
+  const DIAS_S = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  $('dispGrid').innerHTML = mostrar.map(({fecha, slot})=>{
+    const [y,mo,d] = fecha.split('-');
+    const dia = new Date(fecha+'T12:00:00');
+    const label = fecha===hoyStr() ? 'Hoy' : fecha===D(1) ? 'Mañana' : `${DIAS_S[dia.getDay()]} ${d}/${mo}`;
+    return `<div class="disp-slot">
+      <div class="disp-slot-fecha">${label}</div>
+      <div class="disp-slot-hora">${slot}</div>
+      <button class="disp-slot-btn" onclick="abrirModal('turno','${fecha}','${slot}')">+ Agendar</button>
+    </div>`;
+  }).join('') || '<p style="color:var(--gris);font-size:13px">Sin disponibilidad en los próximos días.</p>';
+}
+
+function renderCal(){
+  renderCalKpis();
+  renderDisponibles();
+  ['dia','sem','mes'].forEach(v=> $('v_'+v).classList.toggle('activa', calVista===v));
+  const y=calFecha.getFullYear(), mo=calFecha.getMonth();
+
+  if(calVista==='mes'){
+    $('calTitulo').textContent = MESES_N[mo]+' '+y;
+    const primerDia = (new Date(y,mo,1).getDay()+6)%7;
+    const dias = new Date(y,mo+1,0).getDate();
+    let html = '<div class="cal-grid">' + DIAS_N.map(d=>`<div class="cal-dia-nom">${d}</div>`).join('');
+    for(let i=0;i<primerDia;i++) html += '<div class="cal-celda vacia"></div>';
+    for(let d=1;d<=dias;d++){
+      const fecha = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const esFeriado = !!FERIADOS[fecha];
+      const clsCelda = [fecha===hoyStr()?'hoy':'', esFeriado?'feriado':''].filter(Boolean).join(' ');
+      html += `<div class="cal-celda ${clsCelda}" onclick="abrirModal('turno','${fecha}')">
+        <span class="n">${d}</span>
+        ${esFeriado?`<span class="feriado-label">${FERIADOS[fecha]}</span>`:''}
+        ${turnosDe(fecha).map(turnitoHTML).join('')}</div>`;
+    }
+    $('calCuerpo').innerHTML = html + '</div>';
+
+  } else if(calVista==='sem'){
+    const lun = new Date(calFecha); lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
+    const dom = new Date(lun); dom.setDate(dom.getDate()+6);
+    $('calTitulo').textContent = `Semana del ${lun.getDate()}/${lun.getMonth()+1} al ${dom.getDate()}/${dom.getMonth()+1}`;
+    let html = '<div class="sem-grid">';
+    for(let i=0;i<7;i++){
+      const f = new Date(lun); f.setDate(f.getDate()+i);
+      const fecha = fechaStr(f);
+      const esFeriado = !!FERIADOS[fecha];
+      const clsCol = [fecha===hoyStr()?'hoy':'', esFeriado?'feriado':''].filter(Boolean).join(' ');
+      html += `<div class="sem-col ${clsCol}" onclick="abrirModal('turno','${fecha}')">
+        <div class="sem-cab">${DIAS_N[i]}<span class="num">${f.getDate()}</span>${esFeriado?`<span style="display:block;font-size:9px;color:#b45309;font-weight:700">${FERIADOS[fecha]}</span>`:''}</div>
+        ${turnosDe(fecha).map(turnitoHTML).join('') || '<div style="font-size:11px;color:#b6c2d4;text-align:center;padding-top:10px">— libre —</div>'}
+      </div>`;
+    }
+    $('calCuerpo').innerHTML = html + '</div>';
+
+  } else {
+    $('calTitulo').textContent = calFecha.toLocaleDateString('es-AR',{weekday:'long', day:'numeric', month:'long'});
+    const fecha = fechaStr(calFecha);
+    const ts = turnosDe(fecha);
+    $('calCuerpo').innerHTML =
+      (ts.length ? ts.map(t=>`
+        <div class="turno-dia ${t.sobreturno?'sobreturno':t.privada?'privada':''}">
+          <div class="hora">${t.hora}</div>
+          <div class="quien">
+            <span class="link" onclick="verFicha('${esc(t.paciente)}')">${t.paciente}</span>
+            ${t.sobreturno?'<span class="badge-tipo s">Sobreturno</span>':''}
+            ${t.privada?'<span class="badge-tipo p">Privada</span>':''}
+            ${t.ia?'<span class="badge-tipo" style="background:var(--verde-bg);color:var(--verde)">IA</span>':''}
+            <small>${t.motivo}</small>
+          </div>
+        </div>`).join('')
+      : '<p class="sub" style="margin:10px 0 16px">Sin turnos para este día.</p>') +
+      `<button class="btn" onclick="abrirModal('turno','${fecha}')">+ Agregar turno</button>`;
+  }
+}
+
+/* ================== PACIENTES Y FICHA ================== */
+const COLOR_ETAPA = {'Contactó':'mal','Sacó turno':'medio','Consultó':'medio','En tratamiento':'ok','Retención':'ok','Refirió':'ok'};
+function renderPac(){
+  if(!$('listaPacientes')) return;
+  const q = ($('buscarPac')?$('buscarPac').value||'':'').toLowerCase();
+  const lista = st.pacientes.filter(p=>p.nombre.toLowerCase().includes(q))
+    .sort((a,b)=>b.ultima.localeCompare(a.ultima));
+  if(!lista.length){
+    $('listaPacientes').innerHTML = '<p style="color:var(--gris);font-size:14px;padding:20px 0">Sin resultados para "'+q+'".</p>';
+    return;
+  }
+  $('listaPacientes').innerHTML = lista.map(p=>{
+    const nEsc = esc(p.nombre);
+    const chipClass = COLOR_ETAPA[p.etapa]||'';
+    // Edad
+    let edadTxt = '';
+    if(p.nac){ try{ const y=new Date().getFullYear()-new Date(p.nac).getFullYear(); edadTxt=y+' años'; }catch(e){} }
+    // Próximo turno
+    const hoy = hoyStr();
+    const proximo = st.turnosCal.filter(t=>t.paciente===p.nombre && t.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha))[0];
+    // Historial (últimas 3 entradas)
+    const hist = (p.historial||[]).slice(0,3);
+    const histHTML = hist.length ? `
+      <div class="pac-hist">
+        <div class="pac-hist-tit">Últimas consultas</div>
+        ${hist.map(h=>`<div class="pac-hist-item">
+          <span class="pac-hist-fecha">${fmtFecha(h.fecha)}</span>
+          <div><div class="pac-hist-trat">${h.trat}</div>${h.nota?`<div class="pac-hist-nota">${h.nota}</div>`:''}</div>
+        </div>`).join('')}
+      </div>` : '';
+    const alertaHTML = (p.alergias && p.alergias!=='—') ? `<div class="pac-alerta">⚠ Alergias: ${p.alergias}</div>` : '';
+    const obsHTML = (p.obs && p.obs.trim()) ? `<div style="font-size:12.5px;color:var(--gris);margin-bottom:8px;font-style:italic">📌 ${p.obs}</div>` : '';
+    return `<div class="pac-card">
+      <div class="pac-card-hd">
+        <span class="pac-card-nom" onclick="verFicha('${nEsc}')">${p.nombre}</span>
+        <span class="chip ${chipClass}">${p.etapa}</span>
+        <span style="font-size:12px;color:var(--gris);margin-left:auto">Última visita: ${fmtFecha(p.ultima)}</span>
+        ${proximo?`<span style="font-size:12px;color:var(--verde);font-weight:700">📅 Próx: ${fmtFecha(proximo.fecha)} ${proximo.hora}</span>`:''}
+      </div>
+      <div class="pac-card-body">
+        <div class="pac-info-grid">
+          <div class="pac-info-item">📞 <span>${p.tel}</span></div>
+          ${p.mail?`<div class="pac-info-item">✉ <span>${p.mail}</span></div>`:''}
+          ${edadTxt?`<div class="pac-info-item">🎂 <strong>${edadTxt}</strong></div>`:''}
+          ${p.obra&&p.obra!=='—'?`<div class="pac-info-item">🏥 <span>${p.obra}</span></div>`:''}
+          ${p.desde?`<div class="pac-info-item">📆 Paciente desde <strong>${(()=>{const[y,m,d]=p.desde.split('-');return d+'/'+m+'/'+y;})()} </strong></div>`:''}
+        </div>
+        ${alertaHTML}${obsHTML}${histHTML}
+        <div class="pac-acciones">
+          <button class="btn mini" onclick="verFicha('${nEsc}')">Ver ficha completa →</button>
+          ${p.tel?`<a class="btn wsp" href="${waLink(p.tel,'Hola '+p.nombre.split(' ')[0]+'!')}" target="_blank">💬 WhatsApp</a>`:''}
+          <button class="btn sec mini" onclick="abrirNotaClinica('${nEsc}')">📝 Nueva nota</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function verFicha(nombre){
+  const p = st.pacientes.find(x=>x.nombre===nombre);
+  if(!p){ alert('Paciente no encontrado'); return; }
+  const nEsc = esc(nombre);
+  const fin = st.finanzas.filter(f=>f.paciente===nombre);
+  const tieneAlertas = (p.alergias && p.alergias!=='—') || (p.obs && p.obs!=='');
+  // Motivo de consulta hoy
+  const turnoHoy = st.turnosCal.find(t=>t.paciente===nombre && t.fecha===hoyStr());
+  // Nacimiento + edad
+  const nacFmt = p.nac ? (() => { const [y,m,d]=p.nac.split('-'); return `${d}/${m}/${y}`; })() : '—';
+  // Desde
+  const desdeFmt = p.desde ? (() => { const [y,m,d]=p.desde.split('-'); return `${d}/${m}/${y}`; })() : '—';
+  // Historial timeline HTML
+  const hist = p.historial||[];
+  const ultimaConsulta = hist.length ? hist[0] : null;
+  const histTimeline = hist.length > 1 ? hist.slice(1).map(h=>`
+    <div class="hist-item">
+      <div class="hi-dot"></div>
+      <div class="hi-body">
+        <div class="hi-fecha">${fmtFecha(h.fecha)}</div>
+        <div class="hi-trat">${h.trat}</div>
+        ${h.nota&&h.nota!=='—'?`<div class="hi-nota">${h.nota}</div>`:''}
+      </div>
+    </div>`).join('') : '';
+
+  $('modalCaja').className = 'modal ancho';
+  $('modalCaja').innerHTML = `
+    <div class="ficha-cab">
+      <div><h3 style="margin:0;font-size:18px">👤 ${p.nombre}</h3></div>
+      <button class="btn sec mini" onclick="cerrarModal()">✕</button>
+    </div>
+
+    ${tieneAlertas ? `
+    <div class="ficha-alerta">
+      <div class="alerta-tit">⚠ Alertas médicas</div>
+      ${p.alergias&&p.alergias!=='—'?`<div class="alerta-item">• Alergia: ${p.alergias}</div>`:''}
+      ${p.obs?`<div class="alerta-item">• ${p.obs}</div>`:''}
+    </div>` : ''}
+
+    ${turnoHoy ? `
+    <div class="ficha-motivo">
+      <div class="mot-label">Motivo de consulta hoy</div>
+      <div class="mot-val">${turnoHoy.motivo}</div>
+    </div>` : ''}
+
+    <div class="ficha-grid">
+      <div class="fg-row">
+        <div class="fg-k">Teléfono</div>
+        <div class="fg-v" style="color:var(--verde);font-weight:700">${p.tel||'—'} <a href="${waLink(p.tel, `Hola ${nombre.split(' ')[0]}, te escribimos de ${st.clinica.nombre}.`)}" target="_blank" style="color:var(--verde);text-decoration:none;font-size:15px" title="WhatsApp">📱</a></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg-k">Email</div>
+        <div class="fg-v" style="font-size:12px">${p.mail||'—'}</div>
+      </div>
+      <div class="fg-row">
+        <div class="fg-k">Nacimiento · Edad</div>
+        <div class="fg-v">${nacFmt} · <strong>${edad(p.nac)}</strong></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg-k">Cobertura</div>
+        <div class="fg-v">${p.obra||'—'}</div>
+      </div>
+      <div class="fg-row">
+        <div class="fg-k">Paciente desde</div>
+        <div class="fg-v">${desdeFmt}</div>
+      </div>
+      <div class="fg-row">
+        <div class="fg-k">Contacto de emergencia</div>
+        <div class="fg-v" style="font-size:12px">${p.emergencia||'—'}</div>
+      </div>
+    </div>
+
+    ${ultimaConsulta ? `
+    <div class="ficha-sec" style="margin-bottom:8px">Última consulta</div>
+    <div class="ultima-consulta">
+      <div class="uc-fecha">${fmtFecha(ultimaConsulta.fecha)} — ${ultimaConsulta.trat}</div>
+      ${ultimaConsulta.nota&&ultimaConsulta.nota!=='—'?`<div class="uc-texto">${ultimaConsulta.nota}</div>`:''}
+    </div>` : ''}
+
+    <div class="ficha-sec" style="margin-bottom:8px">Historial clínico</div>
+    ${histTimeline ? `
+    <a class="hist-link" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.hist-arrow').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+      <span class="hist-arrow">▼</span> Ver historial completo (${hist.length - 1} consulta${hist.length-1>1?'s':''} anteriores)
+    </a>
+    <div class="hist-timeline">${histTimeline}</div>`
+    : hist.length===0 ? '<p style="font-size:13px;color:var(--gris)">Sin registros todavía.</p>'
+    : '<p style="font-size:13px;color:var(--gris)">Solo una consulta registrada.</p>'}
+
+    ${fin.length ? `<div style="margin-top:14px;font-size:12.5px"><span class="link" style="color:var(--azul)" onclick="cerrarModal();irA('pagos')">Ver ${fin.length} registro${fin.length>1?'s':''} de pago →</span></div>` : ''}`;
+  $('modalFondo').classList.add('abierto');
+}
+function agregarVisita(nombre){
+  const p = st.pacientes.find(x=>x.nombre===nombre);
+  const trat = $('h_trat').value.trim();
+  if(!trat){ alert('Poné el tratamiento o motivo'); return; }
+  if(!p.historial) p.historial=[];
+  p.historial.unshift({fecha:hoyStr(), trat, nota:$('h_nota').value.trim()||'—'});
+  p.ultima = hoyStr();
+  persistir(); verFicha(nombre);
+}
+
+/* ================== RECETA ================== */
+function nuevaReceta(nombre){
+  $('modalCaja').className = 'modal';
+  $('modalCaja').innerHTML = `<h3>📝 Nueva receta — ${nombre}</h3>
+    <div class="campo"><label>Medicación (Rp/)</label><textarea id="r_med" rows="4" placeholder="Ej:&#10;Amoxicilina 500 mg — 1 comprimido cada 8 h por 7 días"></textarea></div>
+    <div class="campo"><label>Indicaciones</label><textarea id="r_ind" rows="2" placeholder="Ej: Tomar con las comidas. Control en 7 días."></textarea></div>
+    <div class="acciones"><button class="btn sec" onclick="verFicha('${esc(nombre)}')">← Volver</button>
+    <button class="btn verde" onclick="generarReceta('${esc(nombre)}')">Generar receta</button></div>`;
+  $('modalFondo').classList.add('abierto');
+}
+function firmaSelloHTML(){
+  return `<div class="sello">${st.clinica.nombre.toUpperCase()}<br>${st.doctor.nombre}<br>${st.doctor.esp}<br>${st.doctor.mat}</div>
+    <div class="firma">
+      <div class="trazo">${st.doctor.nombre.replace('Dr. ','').replace('Dra. ','')}</div>
+      <div class="linea">${st.doctor.nombre}<small>${st.doctor.esp} · ${st.doctor.mat}</small></div>
+    </div>`;
+}
+function generarReceta(nombre){
+  const med = $('r_med').value.trim();
+  if(!med){ alert('Escribí al menos un medicamento'); return; }
+  const ind = $('r_ind').value.trim();
+  const p = st.pacientes.find(x=>x.nombre===nombre) || {};
+  const f = HOY.toLocaleDateString('es-AR',{day:'numeric', month:'long', year:'numeric'});
+  const textoWA = `RECETA — ${st.clinica.nombre}\n${st.doctor.nombre} · ${st.doctor.esp} · ${st.doctor.mat}\n\nPaciente: ${nombre}${p.obra?' · '+p.obra:''}\nFecha: ${f}\n\nRp/\n${med}${ind?'\n\nIndicaciones: '+ind:''}\n\nFirmado digitalmente.`;
+  $('modalCaja').className = 'modal ancho';
+  $('modalCaja').innerHTML = `
+    <div id="docPrint" class="docu">
+      <div class="enc">
+        <div class="cl">⚕ ${st.clinica.nombre}</div>
+        <small>${st.doctor.nombre} — ${st.doctor.esp} — ${st.doctor.mat}</small>
+        <small>${st.clinica.dir} · Tel: ${st.clinica.tel}</small>
+      </div>
+      <div style="font-size:13px;color:var(--gris);margin-bottom:10px">
+        <strong style="color:var(--texto)">Paciente:</strong> ${nombre} ${p.nac?'· '+edad(p.nac):''} ${p.obra?'· '+p.obra:''}
+      </div>
+      <div class="rp">Rp/</div>
+      <div class="med">${med}</div>
+      ${ind?`<div class="ind"><strong>Indicaciones:</strong> ${ind}</div>`:''}
+      <div class="pie">
+        <div class="fch">${f}</div>
+        <div style="display:flex;align-items:end;gap:18px">${firmaSelloHTML()}</div>
+      </div>
+    </div>
+    <div class="acciones" style="justify-content:space-between">
+      <button class="btn sec" onclick="verFicha('${esc(nombre)}')">← Volver a la ficha</button>
+      <div style="display:flex;gap:8px">
+        <a class="btn wsp" style="padding:9px 18px;font-size:13.5px" target="_blank" href="${waLink(p.tel, textoWA)}">💬 Enviar por WhatsApp</a>
+        <button class="btn" onclick="imprimirDoc('Receta')">🖨 Imprimir / PDF</button>
+      </div>
+    </div>`;
+  if(p.historial){ p.historial.unshift({fecha:hoyStr(), trat:'Receta emitida', nota:med.split('\n')[0]+(ind?' — '+ind:'')}); persistir(); }
+}
+function imprimirDoc(titulo){
+  const css = document.querySelector('style').innerHTML;
+  const w = window.open('','_blank');
+  w.document.write(`<html><head><title>${titulo} — ${st.clinica.nombre}</title><style>${css} body{padding:40px}</style></head><body>${$('docPrint').outerHTML}</body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(), 300);
+}
+
+/* ================== PAGOS ================== */
+function renderPagos(){
+  const fin = st.finanzas;
+  const aceptados = fin.filter(f=>f.presupuesto==='Aceptado');
+  const totalBruto = aceptados.reduce((a,f)=>a+f.monto,0);
+  const cobrado = aceptados.reduce((a,f)=>a+(f.pago==='Sí'?f.monto:f.pago==='Seña'?f.senia:0),0);
+  const porCobrar = totalBruto - cobrado;
+  const rechazados = fin.filter(f=>f.presupuesto==='Rechazado').reduce((a,f)=>a+f.monto,0);
+  const cobroPct = totalBruto>0?(cobrado/totalBruto*100):0;
+  const cobCol = cobroPct>=80?'var(--verde)':cobroPct>=50?'var(--amarillo)':'var(--rojo)';
+
+  // --- KPIs ejecutivos ---
+  $('kpisPagos').innerHTML = `
+    <div class="exec-kpi4">
+      <div class="exec-kpi-card">
+        <div class="exec-kpi-lab">FACTURADO</div>
+        <div class="exec-kpi-num">${money(totalBruto)}</div>
+        <div class="exec-kpi-sub">${aceptados.length} tratamientos aceptados</div>
+      </div>
+      <div class="exec-kpi-card pos">
+        <div class="exec-kpi-lab">COBRADO</div>
+        <div class="exec-kpi-num" style="color:var(--verde)">${money(cobrado)}</div>
+        <div class="exec-kpi-sub" style="color:${cobCol}">${cobroPct.toFixed(0)}% del facturado</div>
+      </div>
+      <div class="exec-kpi-card ${porCobrar>totalBruto*.3?'alerta':''}">
+        <div class="exec-kpi-lab">POR COBRAR</div>
+        <div class="exec-kpi-num" style="color:${porCobrar>totalBruto*.3?'var(--rojo)':'var(--amarillo)'}">${money(porCobrar)}</div>
+        <div class="exec-kpi-sub">de presupuestos aceptados</div>
+      </div>
+      <div class="exec-kpi-card">
+        <div class="exec-kpi-lab">NO CERRADO</div>
+        <div class="exec-kpi-num" style="color:var(--gris)">${money(rechazados)}</div>
+        <div class="exec-kpi-sub">${fin.filter(f=>f.presupuesto==='Rechazado').length} presupuestos rechazados</div>
+      </div>
+    </div>`;
+
+  // --- Por servicio (tabla limpia) ---
+  const porServ2 = {};
+  fin.forEach(f=>{
+    if(!porServ2[f.tratamiento]) porServ2[f.tratamiento]={n:0,bruto:0,cobrado:0};
+    const s=porServ2[f.tratamiento]; s.n++;
+    if(f.presupuesto==='Aceptado'){ s.bruto+=f.monto; s.cobrado+=(f.pago==='Sí'?f.monto:f.pago==='Seña'?f.senia:0); }
+  });
+  const servs2 = Object.entries(porServ2).sort((a,b)=>b[1].bruto-a[1].bruto);
+  const maxB2 = servs2[0]?.[1]?.bruto||1;
+  $('barrasServicios').innerHTML = `
+    <div style="border:1px solid var(--borde);border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#f8fafc;padding:12px 18px;border-bottom:1px solid var(--borde);display:grid;grid-template-columns:1fr 60px 130px 100px 90px;gap:12px">
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris)">Servicio</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris);text-align:center">Casos</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris)">Facturación</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris);text-align:right">Cobrado</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris);text-align:right">% cobrado</span>
+      </div>
+      ${servs2.length?servs2.map(([nom,s])=>{
+        const pct2=s.bruto>0?(s.cobrado/s.bruto*100):0;
+        const cc2=pct2>=80?'var(--verde)':pct2>=50?'var(--amarillo)':'var(--rojo)';
+        const barW=(s.bruto/maxB2*100).toFixed(0);
+        return `<div style="display:grid;grid-template-columns:1fr 60px 130px 100px 90px;gap:12px;padding:10px 18px;border-bottom:1px solid #f8fafc;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:13.5px">${nom}</div>
+            <div style="height:4px;background:#f1f5f9;border-radius:99px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${barW}%;background:var(--azul);border-radius:99px"></div></div>
+          </div>
+          <div style="text-align:center;font-weight:700;font-size:13px">${s.n}</div>
+          <div style="font-weight:800;font-size:13.5px;font-variant-numeric:tabular-nums">${money(s.bruto)}</div>
+          <div style="text-align:right;font-weight:700;color:var(--verde);font-size:13px;font-variant-numeric:tabular-nums">${money(s.cobrado)}</div>
+          <div style="text-align:right;font-weight:800;color:${cc2}">${pct2.toFixed(0)}%</div>
+        </div>`;
+      }).join(''):'<div style="padding:18px;color:var(--gris)">Sin registros</div>'}
+    </div>`;
+
+  // --- Por médico (tabla limpia) ---
+  const porMed = {};
+  fin.forEach(f=>{
+    const med=f.medico||st.doctor.nombre;
+    if(!porMed[med]) porMed[med]={nombre:med,n:0,bruto:0,cobrado:0};
+    const d=porMed[med];
+    if(f.presupuesto==='Aceptado'){ d.bruto+=f.monto; d.cobrado+=(f.pago==='Sí'?f.monto:f.pago==='Seña'?f.senia:0); d.n++; }
+  });
+  const medsArr = Object.values(porMed).sort((a,b)=>b.bruto-a.bruto);
+  $('tablasMedicos').innerHTML = `
+    <div style="border:1px solid var(--borde);border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#f8fafc;padding:12px 18px;border-bottom:1px solid var(--borde);display:grid;grid-template-columns:1fr 60px 130px 100px;gap:12px">
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris)">Médico</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris);text-align:center">Pacs.</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris)">Facturado</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gris);text-align:right">Cobrado</span>
+      </div>
+      ${medsArr.length?medsArr.map(d=>`<div style="display:grid;grid-template-columns:1fr 60px 130px 100px;gap:12px;padding:10px 18px;border-bottom:1px solid #f8fafc;align-items:center">
+        <div style="font-weight:700;font-size:13.5px">${d.nombre}</div>
+        <div style="text-align:center;font-weight:700">${d.n}</div>
+        <div style="font-weight:800;font-size:13.5px;font-variant-numeric:tabular-nums">${money(d.bruto)}</div>
+        <div style="text-align:right;font-weight:700;color:var(--verde);font-variant-numeric:tabular-nums">${money(d.cobrado)}</div>
+      </div>`).join(''):'<div style="padding:18px;color:var(--gris)">Sin registros</div>'}
+    </div>`;
+
+  const chPres = {'Aceptado':'ok','Pendiente':'medio','Rechazado':'mal'};
+  const chPago = f => f.pago==='Sí' ? '<span class="chip ok">Sí</span>'
+    : f.pago==='Seña' ? `<span class="chip medio">Seña ${money(f.senia)}</span>`
+    : '<span class="chip mal">No</span>';
+  $('tablaFin').innerHTML = `<tr><th>Fecha</th><th>Paciente</th><th>Monto</th><th>Presupuesto</th><th>Pagó</th><th>Forma de pago</th><th></th></tr>` +
+    [...st.finanzas].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(f=>`<tr>
+      <td>${fmtFecha(f.fecha)}</td>
+      <td><span class="link" onclick="verFicha('${esc(f.paciente)}')">${f.paciente}</span><br><small style="color:var(--gris)">${f.tratamiento}</small></td>
+      <td><strong>${money(f.monto)}</strong></td>
+      <td><span class="chip ${chPres[f.presupuesto]}">${f.presupuesto}</span></td>
+      <td>${chPago(f)}</td>
+      <td>${f.medio||'—'}</td>
+      <td><button class="btn sec mini" onclick="verInvoice(${f.id})">🖨 INVOICE</button></td></tr>`).join('');
+}
+function verInvoice(id){
+  const f = st.finanzas.find(x=>x.id===id);
+  if(!f) return;
+  const p = st.pacientes.find(x=>x.nombre===f.paciente) || {};
+  const pagado = f.pago==='Sí' ? f.monto : f.pago==='Seña' ? f.senia : 0;
+  const saldo = f.presupuesto==='Aceptado' ? f.monto - pagado : 0;
+  const fch = HOY.toLocaleDateString('es-AR',{day:'numeric', month:'long', year:'numeric'});
+  $('modalCaja').className = 'modal ancho';
+  $('modalCaja').innerHTML = `
+    <div id="docPrint" class="docu">
+      <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;border-bottom:2px solid var(--azul-claro);padding-bottom:14px;margin-bottom:16px">
+        <div>
+          <div class="inv-num">INVOICE Nº MF-${String(f.id).padStart(5,'0')}</div>
+          <small style="color:var(--gris)">Emitido: ${fch}</small>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:17px;font-weight:800;color:var(--azul)">⚕ ${st.clinica.nombre}</div>
+          <small style="color:var(--gris)">${st.clinica.dir}<br>Tel: ${st.clinica.tel}</small>
+        </div>
+      </div>
+      <div style="font-size:13.5px;margin-bottom:14px">
+        <strong>Facturado a:</strong> ${f.paciente}${p.mail?` · ${p.mail}`:''}${p.obra?` · ${p.obra}`:''}
+      </div>
+      <table>
+        <tr><th>Descripción</th><th style="text-align:right">Monto</th></tr>
+        <tr><td>${f.tratamiento} <small style="color:var(--gris)">(${fmtFecha(f.fecha)})</small></td><td style="text-align:right">${money(f.monto)}</td></tr>
+        <tr><td>Pagado${f.pago==='Seña'?' (seña)':''}</td><td style="text-align:right;color:var(--verde)">−${money(pagado)}</td></tr>
+        <tr><td><strong>SALDO PENDIENTE</strong></td><td style="text-align:right"><strong style="font-size:16px;color:${saldo>0?'var(--rojo)':'var(--verde)'}">${money(saldo)}</strong></td></tr>
+      </table>
+      <div style="font-size:12px;color:var(--gris);margin-top:10px">Estado del presupuesto: ${f.presupuesto} · Forma de pago: ${f.medio||'a definir'}</div>
+      <div class="pie">
+        <div class="fch">Gracias por confiar en ${st.clinica.nombre}.</div>
+        <div style="display:flex;align-items:end;gap:18px">${firmaSelloHTML()}</div>
+      </div>
+    </div>
+    <div class="acciones" style="justify-content:space-between">
+      <button class="btn sec" onclick="cerrarModal()">Cerrar</button>
+      <div style="display:flex;gap:8px">
+        <a class="btn wsp" style="padding:9px 18px;font-size:13.5px" target="_blank" href="${waLink(p.tel, `Hola ${f.paciente.split(' ')[0]}! Te enviamos el detalle de tu cuenta en ${st.clinica.nombre}: ${f.tratamiento} — Total ${money(f.monto)}, pagado ${money(pagado)}, saldo ${money(saldo)}.`)}">💬 Enviar por WhatsApp</a>
+        <button class="btn" onclick="imprimirDoc('Invoice')">🖨 Imprimir / PDF</button>
+      </div>
+    </div>`;
+  $('modalFondo').classList.add('abierto');
+}
+
+/* ================== BALANCE ================== */
+const CATS_GASTO = ['Sueldos','Alquiler','Expensas','Proveedores','Maquinaria','Insumos','Otros'];
+function renderBalance(){
+  const cobros = st.finanzas.filter(f=>f.pago!=='No').map(f=>({
+    label:`${f.paciente} — ${f.tratamiento}`, fecha:f.fecha,
+    monto: f.pago==='Sí'?f.monto:f.senia, nota: f.pago==='Seña'?'seña':''
+  })).filter(c=>c.monto>0);
+  const ingresos = cobros.reduce((a,c)=>a+c.monto,0);
+  const egresos = st.gastos.reduce((a,g)=>a+g.monto,0);
+  const resultado = ingresos - egresos;
+  const margen = ingresos>0 ? resultado/ingresos*100 : 0;
+  const pendiente = st.finanzas.filter(f=>f.presupuesto==='Aceptado')
+    .reduce((a,f)=> a + (f.pago==='Sí'?0 : f.pago==='Seña'?f.monto-f.senia : f.monto), 0);
+
+  /* kpisBal → vaciar (movido a tablaBalance) */
+  if($('kpisBal')) $('kpisBal').innerHTML='';
+
+  /* ---- Estado de Resultados P&L ejecutivo ---- */
+  // Sección ingresos: detalle de cobros
+  const ingresoLines = cobros.sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(c=>`
+    <div class="exec-pl-line">
+      <div class="lbl">${c.label}${c.nota?` <span class="chip medio" style="margin-left:4px">${c.nota}</span>`:''} <span style="font-size:11px;color:#94a3b8;margin-left:6px">${fmtFecha(c.fecha)}</span></div>
+      <div class="monto" style="color:var(--verde)">+${money(c.monto)}</div>
+    </div>`).join('');
+
+  // Sección egresos: por categoría con sub-items
+  const egresoLines = CATS_GASTO.map(cat=>{
+    const items = st.gastos.filter(g=>g.categoria===cat);
+    if(!items.length) return '';
+    const sub = items.reduce((a,g)=>a+g.monto,0);
+    return `<div class="exec-pl-line cat-hd">
+        <div class="lbl">${cat}</div>
+        <div class="monto" style="color:var(--rojo)">−${money(sub)}</div>
+      </div>`+
+      items.map((g,i)=>{
+        const ix=st.gastos.indexOf(g);
+        return `<div class="exec-pl-line cat-sub">
+          <div class="lbl" style="display:flex;align-items:center;gap:8px">${g.concepto} <span style="font-size:11px;color:#94a3b8">${fmtFecha(g.fecha)}</span><button class="btn peligro" onclick="borrarGasto(${ix})">✕</button></div>
+          <div class="monto" style="color:var(--gris)">−${money(g.monto)}</div>
+        </div>`;
+      }).join('');
+  }).join('');
+
+  const margenCol = margen>=30?'#34d399':margen>=10?'#fbbf24':'#f87171';
+
+  $('tablaBalance').innerHTML = `
+    <div class="exec-pl">
+      <div class="exec-pl-hd">
+        <span>ESTADO DE RESULTADOS</span>
+        <span style="font-size:12px;color:#60a5fa;font-weight:700;letter-spacing:.5px">${HOY.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).toUpperCase()}</span>
+      </div>
+
+      <div class="exec-pl-sect">
+        <div class="exec-pl-sect-hd">
+          <span>INGRESOS — Cobros a pacientes</span>
+          <span class="exec-pl-sect-total" style="color:var(--verde)">+${money(ingresos)}</span>
+        </div>
+        ${ingresoLines||'<div class="exec-pl-line"><div class="lbl" style="color:var(--gris)">Sin cobros registrados</div><div></div></div>'}
+      </div>
+
+      <div class="exec-pl-sect">
+        <div class="exec-pl-sect-hd">
+          <span>EGRESOS — Gastos de la clínica</span>
+          <span class="exec-pl-sect-total" style="color:var(--rojo)">−${money(egresos)}</span>
+        </div>
+        ${egresoLines||'<div class="exec-pl-line"><div class="lbl" style="color:var(--gris)">Sin gastos registrados</div><div></div></div>'}
+      </div>
+
+      ${pendiente>0?`<div class="exec-pl-sect" style="background:#fffbeb">
+        <div class="exec-pl-sect-hd">
+          <span>POR COBRAR — Presupuestos aceptados pendientes</span>
+          <span class="exec-pl-sect-total" style="color:var(--amarillo)">${money(pendiente)}</span>
+        </div>
+      </div>`:''}
+
+      <div class="exec-resultado">
+        <div>
+          <div class="exec-resultado-lbl">RESULTADO NETO DEL MES</div>
+          <div class="exec-resultado-num" style="color:${resultado>=0?'#34d399':'#f87171'}">${resultado>=0?'+':''}${money(resultado)}</div>
+          <div class="exec-resultado-meta">Ingresos ${money(ingresos)} · Egresos ${money(egresos)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#475569;margin-bottom:6px">MARGEN NETO</div>
+          <div style="background:${margenCol};color:#0f172a;font-size:22px;font-weight:900;padding:10px 18px;border-radius:10px;font-variant-numeric:tabular-nums">${margen.toFixed(0)}%</div>
+          ${pendiente>0?`<div style="font-size:11px;color:#475569;margin-top:8px">+${money(pendiente)} pendiente de cobro</div>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+function borrarGasto(ix){
+  const g = st.gastos[ix];
+  if(g && confirm('¿Eliminar gasto "'+g.concepto+'"?')){ st.gastos.splice(ix,1); persistir(); render(); }
+}
+
+/* ================== USUARIO Y AJUSTES ================== */
+function renderUsuario(){
+  $('u_nombre').value = st.doctor.nombre;
+  $('u_esp').value = st.doctor.esp;
+  $('u_mat').value = st.doctor.mat;
+  $('u_mail').value = st.doctor.mail||'';
+  $('u_quien').textContent = st.doctor.mail||st.doctor.nombre;
+  $('firmaPreview').innerHTML = firmaSelloHTML();
+}
+function guardarUsuario(){
+  st.doctor.nombre = $('u_nombre').value.trim()||st.doctor.nombre;
+  st.doctor.esp = $('u_esp').value.trim()||st.doctor.esp;
+  st.doctor.mat = $('u_mat').value.trim()||st.doctor.mat;
+  st.doctor.mail = $('u_mail').value.trim();
+  persistir(); render();
+}
+function renderAjustes(){
+  $('s_nombre').value = st.clinica.nombre;
+  $('s_dir').value = st.clinica.dir;
+  $('s_tel').value = st.clinica.tel;
+  $('s_ticket').value = st.config.ticket;
+  const opts = ini => Array.from({length:17},(_,i)=>i+6).map(h=>`<option value="${h}" ${h===ini?'selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('');
+  $('s_ini').innerHTML = opts(st.config.horaIni);
+  $('s_fin').innerHTML = opts(st.config.horaFin);
+  const labels = {turno:'Contacto → Turno (%)', asistencia:'Turno → Asistencia (%)', tratamiento:'Consulta → Tratamiento (%)', retencion:'Tratamiento → Retención (%)', referido:'Atendidos → Referido (%)', respuestaHs:'Respuesta máx. (horas)', demoraDias:'Demora máx. turno (días)'};
+  $('benchInputs').innerHTML = Object.keys(labels).map(k=>
+    `<div><label>${labels[k]}</label><input id="b_${k}" type="number" min="0" value="${st.bench[k]}"></div>`).join('');
+}
+function guardarAjustes(){
+  st.clinica.nombre = $('s_nombre').value.trim()||st.clinica.nombre;
+  st.clinica.dir = $('s_dir').value.trim();
+  st.clinica.tel = $('s_tel').value.trim();
+  st.config.ticket = Math.max(0,+$('s_ticket').value||st.config.ticket);
+  st.config.horaIni = +$('s_ini').value;
+  st.config.horaFin = Math.max(+$('s_fin').value, st.config.horaIni+1);
+  persistir(); render();
+}
+function guardarObjetivos(){
+  Object.keys(st.bench).forEach(k=>{
+    const v = +($('b_'+k)?$('b_'+k).value:st.bench[k]);
+    if(v>0) st.bench[k]=v;
+  });
+  persistir(); render();
+}
+
+/* ================== MODALES ================== */
+function abrirModal(tipo, extra, extra2){
+  $('modalCaja').className = 'modal';
+  let html='';
+  if(tipo==='turno'){
+    const libres = slotLibresDelDia(extra);
+    const presel = extra2 || libres[0] || '10:00';
+    const optsLibres = libres.length
+      ? libres.map(s=>`<option value="${s}" ${s===presel?'selected':''}>${s}</option>`).join('')
+      : `<option value="${presel}">${presel} (único disponible)</option>`;
+    const tieneLibres = libres.length > 0;
+    html = `<h3>Nuevo turno — ${fmtFecha(extra)}</h3>
+    ${FERIADOS[extra]?`<div style="background:#fffbf0;border:1px solid #fed7aa;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#b45309;font-weight:600">⚠ ${FERIADOS[extra]} — confirmá que la clínica atiende este día</div>`:''}
+    <div class="campo">
+      <label>Horario disponible</label>
+      ${tieneLibres
+        ? `<select id="m_hora">${optsLibres}</select>`
+        : `<p style="color:var(--rojo);font-size:13px;margin:4px 0">Sin horarios libres para este día.</p><input id="m_hora" type="time" value="${presel}" style="margin-top:6px">`}
+    </div>
+    <div class="campo"><label>Paciente</label><input id="m_pac" placeholder="Nombre del paciente"></div>
+    <div class="campo"><label>Motivo</label><input id="m_motivo" placeholder="Ej: Consulta, control, chequeo..."></div>
+    <div class="campo">
+      <label>Tipo</label>
+      <select id="m_tipo"><option value="">Normal</option><option value="sobreturno">Sobreturno</option><option value="privada">Consulta privada</option></select>
+    </div>
+    <div class="acciones"><button class="btn sec" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn" onclick="agregarTurno('${extra}')">Guardar</button></div>`;
+  }
+  if(tipo==='paciente') html = `<h3>Nuevo paciente</h3>
+    <div class="campo"><label>Nombre</label><input id="m_nom"></div>
+    <div class="campo"><label>Teléfono</label><input id="m_tel"></div>
+    <div class="campo"><label>Email</label><input id="m_mail"></div>
+    <div class="campo"><label>Fecha de nacimiento</label><input id="m_nac" type="date"></div>
+    <div class="campo"><label>Cobertura / obra social</label><input id="m_obra" placeholder="Ej: OSDE 210, Particular..."></div>
+    <div class="campo"><label>Alergias</label><input id="m_alerg" placeholder="— si no tiene"></div>
+    <div class="acciones"><button class="btn sec" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn" onclick="agregarPaciente()">Guardar</button></div>`;
+  if(tipo==='registro') html = `<h3>Nuevo registro de pago</h3>
+    <div class="campo"><label>Paciente</label><input id="m_pac"></div>
+    <div class="campo"><label>Tratamiento</label><input id="m_trat"></div>
+    <div class="campo"><label>Monto total ($)</label><input id="m_monto" type="number" min="0"></div>
+    <div class="campo"><label>Presupuesto</label><select id="m_pres"><option>Pendiente</option><option>Aceptado</option><option>Rechazado</option></select></div>
+    <div class="campo"><label>Pagó</label><select id="m_pago" onchange="$('campoSenia').style.display=this.value==='Seña'?'block':'none'"><option>No</option><option>Sí</option><option>Seña</option></select></div>
+    <div class="campo" id="campoSenia" style="display:none"><label>Monto de la seña ($)</label><input id="m_senia" type="number" min="0"></div>
+    <div class="campo"><label>Forma de pago</label><select id="m_medio"><option>—</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Débito automático</option></select></div>
+    <div class="acciones"><button class="btn sec" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn" onclick="agregarRegistro()">Guardar</button></div>`;
+  if(tipo==='gasto') html = `<h3>Nuevo gasto</h3>
+    <div class="campo"><label>Categoría</label><select id="m_cat">${CATS_GASTO.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="campo"><label>Concepto</label><input id="m_con" placeholder="Ej: Sueldo recepción, cuota equipo..."></div>
+    <div class="campo"><label>Monto ($)</label><input id="m_monto" type="number" min="0"></div>
+    <div class="acciones"><button class="btn sec" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn" onclick="agregarGasto()">Guardar</button></div>`;
+  $('modalCaja').innerHTML = html;
+  $('modalFondo').classList.add('abierto');
+}
+function cerrarModal(){ $('modalFondo').classList.remove('abierto'); }
+
+function asegurarPaciente(nombre, etapa){
+  if(!st.pacientes.find(p=>p.nombre===nombre))
+    st.pacientes.unshift({nombre, tel:'—', mail:'', etapa:etapa||'Sacó turno', ultima:hoyStr(), nac:'', obra:'—', alergias:'—', historial:[]});
+}
+function agregarTurno(fecha){
+  const nom = $('m_pac').value.trim();
+  if(!nom) return alert('Poné el nombre del paciente');
+  const tipo = $('m_tipo')?.value || '';
+  const turno = {fecha, hora:$('m_hora').value||'10:00', paciente:nom, motivo:$('m_motivo').value.trim()||'Consulta'};
+  if(tipo==='sobreturno') turno.sobreturno = true;
+  if(tipo==='privada') turno.privada = true;
+  st.turnosCal.push(turno);
+  asegurarPaciente(nom);
+  persistir(); cerrarModal(); render();
+}
+function agregarPaciente(){
+  if(!$('m_nom').value.trim()) return alert('Poné el nombre');
+  st.pacientes.unshift({nombre:$('m_nom').value.trim(), tel:$('m_tel').value.trim()||'—', mail:$('m_mail').value.trim()||'',
+    nac:$('m_nac').value||'', obra:$('m_obra').value.trim()||'—', alergias:$('m_alerg').value.trim()||'—',
+    etapa:'Sacó turno', ultima:hoyStr(), historial:[]});
+  persistir(); cerrarModal(); render();
+}
+function agregarRegistro(){
+  const nom = $('m_pac').value.trim();
+  if(!nom) return alert('Poné el paciente');
+  st.finanzas.unshift({id:Date.now(), fecha:hoyStr(), paciente:nom, tratamiento:$('m_trat').value.trim()||'—', monto:+$('m_monto').value||0,
+    presupuesto:$('m_pres').value, pago:$('m_pago').value, senia:+($('m_senia')?$('m_senia').value:0)||0, medio:$('m_medio').value});
+  asegurarPaciente(nom);
+  persistir(); cerrarModal(); render();
+}
+function agregarGasto(){
+  if(!$('m_con').value.trim()) return alert('Poné el concepto');
+  st.gastos.unshift({fecha:hoyStr(), categoria:$('m_cat').value, concepto:$('m_con').value.trim(), monto:+$('m_monto').value||0});
+  persistir(); cerrarModal(); render();
+}
+
+/* ================== CHAT (IA + SOPORTE) ================== */
+function abrirChat(titulo, sub, azul){
+  $('modalCaja').className = 'modal chat';
+  $('modalCaja').innerHTML = `
+    <div class="chat-cab ${azul?'azul':''}">
+      <div><div class="t">${titulo}</div><div class="s">${sub}</div></div>
+      <button onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="chat-cuerpo ${azul?'azulbg':''}" id="chatCuerpo"></div>
+    <div class="chat-ops" id="chatOps"></div>`;
+  $('modalFondo').classList.add('abierto');
+}
+function horaChat(){ return new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}); }
+function burbuja(txt, mia){
+  const c = $('chatCuerpo');
+  c.insertAdjacentHTML('beforeend', `<div class="burb ${mia?'yo':'ia'}">${txt}<span class="hora">${horaChat()}</span></div>`);
+  c.scrollTop = c.scrollHeight;
+}
+function opciones(ops){
+  $('chatOps').innerHTML = ops.map((o,i)=>`<button onclick="elegirOp(${i})">${o[0]}</button>`).join('');
+  window._ops = ops;
+}
+function elegirOp(i){
+  const [txt, fn] = window._ops[i];
+  burbuja(txt, true);
+  $('chatOps').innerHTML = '';
+  fn();
+}
+function iaMsg(txt, ops, mostrarVeloz){
+  const c = $('chatCuerpo');
+  c.insertAdjacentHTML('beforeend', `<div class="escribiendo" id="escr">•••</div>`);
+  c.scrollTop = c.scrollHeight;
+  setTimeout(()=>{
+    const e = $('escr'); if(e) e.remove();
+    burbuja(txt, false);
+    if(mostrarVeloz){
+      c.insertAdjacentHTML('beforeend', `<div class="veloz">⚡ Respondió en 2 segundos — a cualquier hora</div>`);
+      c.scrollTop = c.scrollHeight;
+    }
+    if(ops) opciones(ops);
+  }, 800);
+}
+
+/* --- Demo Recepcionista IA --- */
+function abrirDemoIA(){
+  abrirChat(`⚕ ${st.clinica.nombre} · Recepcionista IA`, 'en línea — responde en segundos, 24/7');
+  iaMsg('¡Hola! 👋 Soy la asistente de la clínica. Puedo responder tus dudas y darte un turno ahora mismo. ¿En qué te ayudo?', [
+    ['¿Cuánto sale una consulta?', iaPrecio],
+    ['¿Atienden por obra social?', iaObra],
+    ['Quiero sacar un turno', iaTurnos]
+  ], true);
+}
+function iaPrecio(){
+  iaMsg('La consulta general sale $45.000 e incluye control de seguimiento sin cargo. 😊\n\n¿Querés que te reserve un turno?', [
+    ['Sí, dame un turno', iaTurnos],
+    ['¿Atienden por obra social?', iaObra]
+  ]);
+}
+function iaObra(){
+  iaMsg('Sí ✅ Trabajamos con OSDE, Swiss Medical y Galeno. Si tenés otra, la consulta igual tiene descuento del 20%.\n\n¿Te reservo un turno?', [
+    ['Sí, dame un turno', iaTurnos],
+    ['¿Cuánto sale una consulta?', iaPrecio]
+  ]);
+}
+function iaTurnos(){
+  const f1 = new Date(HOY); f1.setDate(f1.getDate()+1);
+  const f2 = new Date(HOY); f2.setDate(f2.getDate()+2);
+  const d1 = f1.toLocaleDateString('es-AR',{weekday:'long', day:'numeric'});
+  const d2 = f2.toLocaleDateString('es-AR',{weekday:'long', day:'numeric'});
+  iaMsg('¡Perfecto! Tengo estos lugares disponibles:', [
+    [`${d1} — 10:00`, ()=>iaConfirmar(fechaStr(f1),'10:00')],
+    [`${d1} — 16:30`, ()=>iaConfirmar(fechaStr(f1),'16:30')],
+    [`${d2} — 09:30`, ()=>iaConfirmar(fechaStr(f2),'09:30')]
+  ]);
+}
+function iaConfirmar(fecha, hora){
+  st.turnosCal.push({fecha, hora, paciente:'Paciente demo (IA)', motivo:'Agendado por Recepcionista IA', ia:true});
+  asegurarPaciente('Paciente demo (IA)');
+  persistir();
+  const [y,m,d] = fecha.split('-');
+  iaMsg(`Listo ✅ Tu turno quedó agendado para el ${d}/${m} a las ${hora}.\n\nTe va a llegar un recordatorio 48 h y 3 h antes. ¡Te esperamos! ⚕`, [
+    ['Ver el turno en el calendario', ()=>{ cerrarModal(); irA('cal'); }],
+    ['Cerrar', cerrarModal]
+  ]);
+}
+
+/* --- Soporte --- */
+function abrirSoporte(){
+  abrirChat('🛟 Soporte MediFlow', 'te respondemos al toque', true);
+  iaMsg('¡Hola! Soy el asistente de soporte de MediFlow. ¿Con qué te puedo ayudar?', [
+    ['¿Cómo cargo los datos del mes?', sopDatos],
+    ['¿Cómo agrego un turno?', sopTurno],
+    ['Hablar con una persona', sopHumano]
+  ]);
+}
+function sopDatos(){
+  iaMsg('Fácil: andá a la pestaña RENDIMIENTO y tocá el botón "✎ Cargar datos". Completás los números del mes y el sistema calcula todo solo: flujo, fugas y oportunidades. 📊', [
+    ['¿Cómo agrego un turno?', sopTurno],
+    ['Listo, gracias', cerrarModal]
+  ]);
+}
+function sopTurno(){
+  iaMsg('Tenés dos formas: en HOY, tocá cualquier horario libre de la agenda. O en CALENDARIO, tocá el día que quieras. Completás nombre y motivo, y listo. 🗓', [
+    ['¿Cómo cargo los datos del mes?', sopDatos],
+    ['Listo, gracias', cerrarModal]
+  ]);
+}
+function sopHumano(){
+  iaMsg('¡Por supuesto! Escribinos a soporte@mediflow.app o al WhatsApp +54 9 11 0000-0000 y un humano del equipo te responde en menos de 2 horas hábiles. 🙌', [
+    ['Listo, gracias', cerrarModal]
+  ]);
+}
+
+/* ================== NOTA CLÍNICA + DICTADO ================== */
+function abrirNotaClinica(nombre, fecha){
+  const nEsc = esc(nombre);
+  $('modalCaja').className = 'modal ancho';
+  $('modalCaja').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h3>📝 Nota clínica — ${nombre}</h3>
+      <button class="btn sec mini" onclick="cerrarModal()">✕</button>
+    </div>
+    <p style="font-size:12.5px;color:var(--gris);margin-bottom:16px">Dictá o escribí libremente. La IA ordena la información al guardar.</p>
+    <div class="nota-fila-input" style="align-items:flex-start">
+      <textarea id="nc_texto" rows="7" placeholder="Describí la consulta libremente: motivo, evolución, plan de tratamiento, pedidos de estudios, consentimientos..." style="width:100%"></textarea>
+      <button class="mic-mini" id="mic_nc" onclick="dictarCampo('nc_texto','mic_nc')" title="Dictar con voz" style="margin-top:2px">🎤</button>
+    </div>
+    <div class="acciones" style="margin-top:20px">
+      <button class="btn sec" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn verde" onclick="guardarNotaClinica('${nEsc}','${fecha||hoyStr()}')">Guardar nota</button>
+    </div>`;
+  $('modalFondo').classList.add('abierto');
+}
+
+function dictarCampo(fieldId, btnId){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert('Tu navegador no soporta dictado por voz.\nUsá Chrome o Edge para esta función.'); return; }
+  const btn = $(btnId);
+  if(btn.dataset.rec==='1'){
+    if(window._recActivo){ try{ window._recActivo.stop(); }catch(e){} }
+    return;
+  }
+  const rec = new SR();
+  rec.lang = 'es-AR';
+  rec.continuous = true;
+  rec.interimResults = true;
+  window._recActivo = rec;
+  btn.dataset.rec = '1';
+  btn.classList.add('grabando');
+  btn.textContent = '⏹';
+  let base = $(fieldId).value;
+  rec.onresult = e => {
+    let interim = '';
+    for(let i=e.resultIndex; i<e.results.length; i++){
+      if(e.results[i].isFinal) base += (base?' ':'') + e.results[i][0].transcript;
+      else interim = e.results[i][0].transcript;
+    }
+    $(fieldId).value = base + (interim ? ' '+interim : '');
+  };
+  const reset = () => { btn.dataset.rec='0'; btn.classList.remove('grabando'); btn.textContent='🎤'; window._recActivo=null; };
+  rec.onerror = reset;
+  rec.onend = reset;
+  rec.start();
+}
+
+function guardarNotaClinica(nombre, fecha){
+  const p = st.pacientes.find(x=>x.nombre===nombre);
+  if(!p){ cerrarModal(); return; }
+  const nota = ($('nc_texto')?.value||'').trim();
+  if(!nota){ alert('Escribí o dictá la nota antes de guardar.'); return; }
+  if(!p.historial) p.historial=[];
+  p.historial.unshift({ fecha, trat: nota.substring(0,70)+(nota.length>70?'…':''), nota });
+  p.ultima = hoyStr();
+  persistir(); cerrarModal(); renderHoy();
+}
+
+/* ================== RECETA ================== */
+function abrirReceta(nombre, fecha){
+  const nEsc = esc(nombre);
+  $('modalCaja').className = 'modal ancho';
+  $('modalCaja').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h3>📋 Receta — ${nombre}</h3>
+      <button class="btn sec mini" onclick="cerrarModal()">✕</button>
+    </div>
+    <p style="font-size:12.5px;color:var(--gris);margin-bottom:16px">Dictá o escribí los medicamentos. La IA genera la receta en formato estándar.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div>
+        <label>Diagnóstico</label>
+        <input id="rec_diag" type="text" placeholder="Ej: HTA · Diabetes tipo 2" style="width:100%">
+      </div>
+      <div>
+        <label>Duración del tratamiento</label>
+        <input id="rec_duracion" type="text" placeholder="Ej: 30 días" style="width:100%">
+      </div>
+    </div>
+    <div>
+      <label>Medicamentos e indicaciones</label>
+      <div class="nota-fila-input" style="align-items:flex-start">
+        <textarea id="rec_texto" rows="6" placeholder="Dictá o escribí: nombre del medicamento, dosis, frecuencia y vía de administración. Ej: Enalapril 10 mg — 1 comprimido cada 12 hs por vía oral..." style="width:100%"></textarea>
+        <button class="mic-mini" id="mic_rec" onclick="dictarCampo('rec_texto','mic_rec')" title="Dictar medicamentos" style="margin-top:2px">🎤</button>
+      </div>
+    </div>
+    <div class="acciones" style="margin-top:20px">
+      <button class="btn sec" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn verde" onclick="guardarReceta('${nEsc}','${fecha||hoyStr()}')">Generar receta</button>
+    </div>`;
+  $('modalFondo').classList.add('abierto');
+}
+
+function guardarReceta(nombre, fecha){
+  const texto = ($('rec_texto')?.value||'').trim();
+  const diag  = ($('rec_diag')?.value||'').trim();
+  if(!texto){ alert('Escribí o dictá los medicamentos antes de generar la receta.'); return; }
+  const p = st.pacientes.find(x=>x.nombre===nombre);
+  if(p){
+    if(!p.historial) p.historial=[];
+    const resumen = `[RECETA] ${diag||'Sin diagnóstico'} — ${texto.substring(0,60)}${texto.length>60?'…':''}`;
+    p.historial.unshift({ fecha, trat: resumen, nota: texto });
+    p.ultima = hoyStr();
+    persistir();
+  }
+  cerrarModal();
+  // Preview de receta generada
+  setTimeout(()=>{
+    $('modalCaja').className = 'modal ancho';
+    $('modalCaja').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3>✅ Receta generada</h3>
+        <button class="btn sec mini" onclick="cerrarModal()">✕</button>
+      </div>
+      <div style="border:1px solid var(--borde);border-radius:10px;padding:20px;font-size:13.5px;line-height:1.7;background:#fafbfd">
+        <div style="text-align:center;border-bottom:1px solid var(--borde);padding-bottom:12px;margin-bottom:14px">
+          <div style="font-weight:800;font-size:16px">${st.clinica.nombre}</div>
+          <div style="color:var(--gris);font-size:12px">${st.clinica.dir} · ${st.clinica.tel}</div>
+          <div style="color:var(--gris);font-size:12px">${st.doctor.nombre} · ${st.doctor.mat}</div>
+        </div>
+        <div style="margin-bottom:8px"><strong>Paciente:</strong> ${nombre}</div>
+        <div style="margin-bottom:8px"><strong>Fecha:</strong> ${fecha}</div>
+        ${diag?`<div style="margin-bottom:12px"><strong>Diagnóstico:</strong> ${diag}</div>`:''}
+        <div style="border-top:1px solid var(--borde);padding-top:12px;margin-top:4px">
+          <div style="font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Prescripción</div>
+          <div style="white-space:pre-wrap">${texto}</div>
+        </div>
+      </div>
+      <div class="acciones" style="margin-top:16px">
+        <button class="btn sec" onclick="cerrarModal()">Cerrar</button>
+        <button class="btn" onclick="window.print()">🖨 Imprimir</button>
+      </div>`;
+    $('modalFondo').classList.add('abierto');
+  }, 50);
+}
+
+/* ================== CHECK-IN ================== */
+function setCheckin(idx, estado){
+  if(!st.turnosCal[idx]) return;
+  st.turnosCal[idx].checkin = st.turnosCal[idx].checkin===estado ? undefined : estado;
+  persistir(); renderHoy();
+}
+
+/* ================== RENDER GENERAL ================== */
+function render(){
+  renderNav(); llenarSelectores();
+  renderHoy(); renderPac(); renderDiag(); renderIA(); renderCal(); renderPagos(); renderBalance(); renderUsuario(); renderAjustes();
+}
+// No iniciar hasta que se elija rol
+</script>
+</body>
+</html>
