@@ -1212,7 +1212,7 @@ function irA(t){ tabActiva=t; render(); window.scrollTo(0,0); }
 function tabsActuales(){ return rolActual==='capa2' ? TABS_C2 : TABS_C1; }
 function renderNav(){
   const tabs = tabsActuales();
-  $('nav').innerHTML = tabs.map(([id,ico,n])=>`<button class="${tabActiva===id?'activa':''}" onclick="irA('${id}')"><span class="sb-icon">${ico}</span>${n}</button>`).join('');
+  $('nav').innerHTML = tabs.map(([id,ico,n])=>`<button class="${tabActiva===id?'activa':''}" onclick="irA('${id}')">${n}</button>`).join('');
   [...document.querySelectorAll('.pestania')].forEach(s=>s.classList.remove('visible'));
   if($('tab-'+tabActiva)) $('tab-'+tabActiva).classList.add('visible');
 }
